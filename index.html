@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ANALYZER</title>
+<style>
+:root{--d:#17232d;--r:#244b62;--a:#0aa58d;--line:#d8e1e6}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;height:100vh;overflow:hidden;background:#edf2f5;color:#17232d}
+header{height:116px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:14px 18px;position:relative}.brand{min-width:240px}.brand h1{margin:0;font-size:23px}.brand b{color:var(--a)}.brand small{color:#687782}
+.fault{flex:1;min-width:0}.fault label{font-weight:700;display:block;margin-bottom:6px}.fault input{width:100%;padding:12px;border:1px solid #b9c5cd;border-radius:8px;font-size:15px}.btn{border:0;border-radius:8px;padding:11px 13px;font-weight:700;cursor:pointer}.primary{background:var(--a);color:#fff}.soft{background:#e9eff2}.greet{position:absolute;right:18px;top:5px;font-size:12px;color:#64737d}
+.grid{height:calc(100vh - 116px);display:grid;grid-template-columns:290px minmax(430px,1fr) 330px}.left,.right{color:#fff;overflow:auto}.left{background:var(--d)}.right{background:var(--r)}.panel{padding:14px}.panel h2{font-size:14px;margin:0 0 10px}.count{font-size:12px;opacity:.8;margin-bottom:10px}.item{padding:9px 10px;margin:6px 0;border:1px solid #ffffff25;border-radius:8px;background:#ffffff0d;cursor:pointer}.item:hover,.item.active{background:#0aa58d55}.item small{opacity:.8}
+.center{background:#fff;overflow-y:auto;padding:0 16px 30px;scroll-behavior:smooth}.top{position:sticky;top:0;z-index:8;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 0 9px;border-bottom:1px solid #e5ebee}.badge{background:#edf3f5;padding:8px 12px;border-radius:8px;font-weight:bold}.status{font-size:12px;color:#65747e;margin-top:4px}.progress{height:5px;background:#e5ecef;margin-top:6px;border-radius:4px;overflow:hidden}.bar{height:100%;width:0;background:var(--a)}
+.drop{max-width:930px;margin:16px auto;padding:22px;text-align:center;border:2px dashed #aab8c2;border-radius:12px;background:#fafcfd}.drop.over{border-color:var(--a);background:#edfffb}.pages{max-width:1050px;margin:auto}.page{margin:18px auto;background:#f5f8f9;border:1px solid #d5dfe4;border-radius:10px;padding:10px}.ph{display:flex;justify-content:space-between;padding:5px 6px 9px;font-weight:bold;color:#5e6d77}.page canvas{display:block;max-width:100%;height:auto;margin:auto;background:#fff;box-shadow:0 1px 8px #0002}.page{position:relative}.canvasWrap{position:relative;width:max-content;max-width:100%;margin:auto}.markLayer{position:absolute;inset:0;pointer-events:none}.refMark{position:absolute;border:4px solid #e53935;background:#ffeb3b55;border-radius:50%;box-shadow:0 0 0 3px #fff8;animation:pulseMark 1.1s ease-in-out 3}@keyframes pulseMark{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}.empty{padding:90px 20px;text-align:center;color:#71808a}
+.tabs{display:flex;margin:-14px -14px 12px}.tab{flex:1;text-align:center;padding:13px 5px;background:#0002;font-weight:bold;cursor:pointer}.tab.active{background:var(--a)}.librow{display:flex;gap:5px;align-items:center}.librow span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mini{border:0;border-radius:5px;padding:5px;cursor:pointer}
+.modal{display:none;position:fixed;z-index:30;width:390px;background:#fff;border:1px solid #c3cfd6;border-radius:10px;box-shadow:0 18px 55px #0004}.mh{padding:11px;background:var(--d);color:#fff;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;cursor:move}.mb{padding:14px}.cause{padding:9px;border:1px solid #dce4e9;border-radius:7px;margin:8px 0;cursor:pointer}.cause:hover{background:#edf9f7}.warn{background:#fff5db;border:1px solid #eed28c;padding:10px;border-radius:8px;color:#6b5414}.locHint{position:absolute;z-index:4;border:2px dashed #e53935;background:#ffeb3b22;border-radius:10px;pointer-events:none}.toast{display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#17232d;color:#fff;padding:10px 16px;border-radius:8px;z-index:40}
+@media(max-width:950px){.grid{grid-template-columns:220px 1fr}.right{display:none}.brand{min-width:175px}}
+</style>
+<style id="analyzer-mobile-v2">
+/* ANALYZER PRO — phone portrait/touch layer */
+.mobileBar{display:none}
+@media (max-width:760px){
+ html,body{width:100%;max-width:100%;overflow-x:hidden}
+ body{font-size:14px}
+ .mobileBar{
+   display:flex;position:sticky;top:0;z-index:10000;height:52px;
+   align-items:center;justify-content:space-between;padding:0 8px;
+   background:#101820;color:#fff;box-shadow:0 2px 10px #0005
+ }
+ .mobileBar button{min-width:46px;min-height:42px;border:0;border-radius:10px;
+   padding:8px 11px;font-size:17px;font-weight:700;touch-action:manipulation}
+ .mobileTitle{font-size:13px;font-weight:800;letter-spacing:.3px;text-align:center}
+ #mobileShade{display:none;position:fixed;inset:52px 0 0;z-index:8998;background:#0008}
+ #mobileShade.open{display:block}
+ /* Existing left/right columns become off-canvas drawers */
+ #leftPanel,#rightPanel,.leftPanel,.rightPanel,aside.left,aside.right{
+   position:fixed!important;top:52px!important;bottom:0!important;width:min(88vw,360px)!important;
+   max-width:360px!important;height:auto!important;z-index:9000!important;overflow:auto!important;
+   transition:transform .22s ease!important;box-shadow:0 8px 30px #0007!important
+ }
+ #leftPanel,.leftPanel,aside.left{left:0!important;right:auto!important;transform:translateX(-105%)}
+ #rightPanel,.rightPanel,aside.right{right:0!important;left:auto!important;transform:translateX(105%)}
+ #leftPanel.mobileOpen,.leftPanel.mobileOpen,aside.left.mobileOpen,
+ #rightPanel.mobileOpen,.rightPanel.mobileOpen,aside.right.mobileOpen{transform:translateX(0)!important}
+ main,#main,.main,.workspace,.center,.centerPanel,#centerPanel{
+   width:100%!important;max-width:100%!important;margin:0!important;padding-left:0!important;padding-right:0!important
+ }
+ canvas{max-width:100%!important;height:auto!important}
+ .canvasWrap{max-width:100%!important;margin-left:auto!important;margin-right:auto!important}
+ button,input,select,.tab,[role="button"]{min-height:42px}
+ input,select{font-size:16px!important} /* prevents mobile auto zoom */
+ .refMark{pointer-events:none}
+ #badge{position:fixed!important;right:8px!important;top:60px!important;z-index:8000!important}
+}
+</style>
+
+
+<style id="analyzer-lang-left">
+#langBox select{max-width:190px;min-width:120px}
+@media(max-width:760px){#langBox{width:100%!important;margin-bottom:8px!important}#langBox select{max-width:58%!important}}
+</style>
+<style id="analyzer-brand-frame-style">
+#brandFrame{max-width:100%}
+@media(max-width:760px){
+ #brandFrame{padding:7px 10px!important;min-width:0!important}
+ #brandFrame .brand{font-size:24px!important}
+ #chiefName{font-size:12px!important}
+ #appSub{font-size:7px!important}
+}
+</style>
+
+<style id="authAdminCSS">
+#authGate{position:fixed;inset:0;z-index:999999;background:#edf2f4;display:flex;align-items:center;justify-content:center;padding:22px;font-family:Arial,sans-serif}
+#authGate.off{display:none}.authbox{width:min(450px,95vw);background:#fff;border-radius:18px;padding:26px;box-shadow:0 18px 55px #17313d33}
+.authbrand{border:2px solid #263b46;border-radius:9px;text-align:center;padding:12px;margin-bottom:20px}.authbrand b{display:block;font-size:34px;font-style:italic}.authbrand span{font-size:17px;font-weight:600}
+.authbox h2{margin:5px 0}.authbox p{font-size:13px;color:#66767d}.af{margin:11px 0}.af label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}.af input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #bdc9ce;border-radius:8px;font-size:15px}
+.abtn{width:100%;padding:12px;border:0;border-radius:8px;background:#0daa91;color:#fff;font-weight:800;cursor:pointer}.alink{border:0;background:none;color:#087d70;font-weight:700;cursor:pointer}.aerr{min-height:18px;color:#b42318;font-size:12px;margin:7px 0}
+#adminBtn{position:fixed;right:18px;top:10px;z-index:90000;display:none;border:0;border-radius:8px;background:#172d38;color:#fff;padding:10px 14px;font-weight:800;cursor:pointer}
+#adminPanel{position:fixed;right:15px;top:55px;width:min(520px,94vw);max-height:78vh;overflow:auto;background:#fff;z-index:90001;border:1px solid #b9c7cd;border-radius:12px;box-shadow:0 15px 45px #0003;padding:14px;display:none}
+.userrow{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;padding:10px;border-bottom:1px solid #e2e8eb}.led{width:10px;height:10px;border-radius:50%;display:inline-block}.on{background:#13b66a;box-shadow:0 0 7px #13b66a}.offl{background:#d94242;box-shadow:0 0 7px #d94242}
+.uname{font-weight:800;cursor:pointer}.umail{font-size:11px;color:#687980}.shareBtn{border:0;border-radius:6px;padding:6px 8px;cursor:pointer}
+#userPop{position:fixed;z-index:90005;background:#fff;border:1px solid #aebdc4;border-radius:10px;padding:12px;box-shadow:0 12px 35px #0003;display:none;min-width:260px}
+#shareBox{display:none;padding:10px;background:#f2f6f7;border-radius:8px;margin-top:10px}.filechecks{max-height:130px;overflow:auto;background:#fff;padding:7px;border-radius:6px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style id="analyzerCloudV4CSS">
+.cloudBadge{font-size:10px;padding:3px 7px;border-radius:10px;background:#e8eef0;color:#39505a;margin-left:6px}
+.nameState{font-size:11px;min-height:14px;margin-top:3px}.nameOK{color:#138a4b}.nameNO{color:#c22b2b}
+#shareModal,#faultTechModal{position:fixed;z-index:96000;background:#fff;border:1px solid #9eafb6;border-radius:12px;box-shadow:0 18px 55px #0004;display:none}
+#shareModal{left:50%;top:18%;transform:translateX(-50%);width:min(480px,90vw);padding:15px}
+#faultTechModal{left:18%;top:18%;width:min(650px,82vw);max-height:72vh;overflow:auto}
+.dragHead{cursor:move;background:#17323e;color:#fff;padding:10px 12px;border-radius:11px 11px 0 0;user-select:none;font-weight:800}
+#faultTechBody{padding:13px}.faultStep{padding:9px;border-bottom:1px solid #e1e7e9}.faultStep small{color:#60747d}
+.eqRouteBox{font-size:11px;margin-top:5px;padding:7px;background:#eef4f5;border-radius:7px;line-height:1.5}
+.analyzerRefFocus{position:absolute;z-index:70;pointer-events:none;border:3px solid #111;background:rgba(255,215,0,.52);border-radius:2px;box-shadow:0 0 0 2px #fff,0 0 10px #1118}
+.analyzerRefFocus.strong{background:rgba(255,195,0,.9);border-width:4px}
+.shareGrid label{display:block;padding:6px}.shareGrid select{width:100%;padding:8px;margin:6px 0}
+</style>
+</head><body>
+<div id="shareModal"><b>Dosya Paylaş</b><div id="shareModalBody"></div><button class="shareBtn" onclick="document.getElementById('shareModal').style.display='none'">Kapat</button></div>
+<div id="faultTechModal"><div id="faultTechHead" class="dragHead">Arıza Kontrol Sırası <button id="faultTechClose" style="float:right">×</button></div><div id="faultTechBody"></div></div>
+
+<div id="authGate">
+ <div class="authbox">
+  <div class="authbrand"><b>ANALYZER</b><span>Baş Çarkçı Aygün Gürcan</span></div>
+  <div id="regView">
+   <h2>Hesap Oluştur</h2><p>Programı açmadan önce kullanıcı hesabınızı oluşturun.</p>
+   <div class="af"><label>Mail adresi</label><input id="regMail" type="email" autocomplete="email"></div>
+   <div class="af"><label>Kullanıcı adı</label><input id="regUser" autocomplete="username" placeholder="Örn. Aygün Gürcan"><div id="userNameState" class="nameState"></div></div>
+   <div class="af"><label>Parola</label><input id="regPass1" type="password" autocomplete="new-password"></div>
+   <div class="af"><label>Parola tekrar</label><input id="regPass2" type="password" autocomplete="new-password"></div>
+   <div class="aerr" id="regErr"></div><button class="abtn" id="registerBtn">Hesap Oluştur ve Giriş Yap</button>
+   <p style="text-align:center">Hesabınız var mı? <button class="alink" id="toLogin">Giriş yap</button></p>
+  </div>
+  <div id="loginView" style="display:none">
+   <h2>Giriş</h2><p>Mail adresiniz ve parolanız ile giriş yapın.</p>
+   <div class="af"><label>Mail adresi</label><input id="loginMail" type="email" autocomplete="email"></div>
+   <div class="af"><label>Parola</label><input id="loginPass" type="password" autocomplete="current-password"></div>
+   <div class="aerr" id="loginErr"></div><button class="abtn" id="loginBtn">Giriş Yap</button>
+   <p style="text-align:center">Yeni kullanıcı mısınız? <button class="alink" id="toReg">Hesap oluştur</button></p>
+  </div>
+  <p style="text-align:center;font-size:11px">Merkez yönetici hesabı: aygungurcan@gmail.com</p>
+ </div>
+</div>
+<button id="adminBtn">Yönetici Paneli</button>
+<div id="adminPanel"><b>Yönetici Paneli</b><div id="adminUsers"></div></div>
+<div id="userPop"></div>
+
+
+<div class="mobileBar" id="analyzerMobileBar">
+ <button type="button" id="mobileLeftBtn" aria-label="Devre elemanları">☰</button>
+ <div class="mobileTitle">ANALYZER</div>
+ <button type="button" id="mobileRightBtn" aria-label="Ekipman ve dosyalar">☷</button>
+</div>
+<div id="mobileShade"></div>
+
+<header><div id="brandFrame" style="display:inline-block;border:2px solid #263b48;border-radius:7px;padding:8px 14px 7px 14px;background:#fff;min-width:235px;box-sizing:border-box;text-align:center">
+  <div class="brand" style="font-family:Arial,Helvetica,sans-serif;font-style:italic;font-weight:700;letter-spacing:.8px;font-size:34px;line-height:1.05;text-align:center;width:100%">ANALYZER</div>
+  <div id="chiefName" style="font-size:17px;font-weight:600;color:#26343d;margin-top:5px;line-height:1.15;text-align:center">Baş Çarkçı Aygün Gürcan</div>
+  <div id="appSub" style="font-size:8px;font-weight:500;color:#77828a;margin-top:4px;line-height:1.1">Elektrik Şema Analizi</div>
+</div>
+<div class="fault"><label>Merhaba Çarkçım, lütfen arızayı bu satırda belirtin.</label><input id="fault" placeholder="Örn: Jeneratör No.1 start almıyor — Enter"></div>
+<input id="picker" type="file" hidden accept=".pdf">
+</header><div class="grid">
+<aside class="left"><div class="panel"><div id="langBox" style="position:static;z-index:auto;background:#fff;border:1px solid #d6dde2;border-radius:10px;padding:6px 8px;margin:0 0 10px 0;box-shadow:none;display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;box-sizing:border-box"><span style="font-weight:800;font-size:13px">🌐 <span id="langLabel">Language</span></span><select id="langSelect" style="height:34px;border:1px solid #cbd5db;border-radius:8px;padding:0 6px;background:#fff;font-weight:700"><option value="en">English</option><option value="de">Deutsch</option><option value="it">Italiano</option><option value="fr">Français</option><option value="id">Bahasa Indonesia</option><option value="th">ไทย</option><option value="zh">中文</option><option value="ja">日本語</option><option value="tr">Türkçe</option></select></div>
+<button class="btn primary" id="scanSchema" data-i18n="scan" style="width:100%;margin-bottom:12px;font-weight:800">ŞEMAYI TARA</button><h2 data-i18n="elements">DEVRE ELEMANLARI</h2><div class="count" id="elCount"><span data-t="waiting">PDF bekleniyor</span></div><div id="elements"></div></div></aside>
+<main class="center" id="center"><div class="top"><div><b id="title"><span data-t="viewer">ŞEMA GÖRÜNTÜLEME</span></b><div class="status" id="status">PDF motoru hazırlanıyor…</div><div class="progress"><div class="bar" id="bar"></div></div></div><span class="badge" id="badge">SAYFA 0/0</span></div>
+<div class="drop" id="drop"><b><span data-t="drop1">PDF elektrik şemasını buraya sürükleyip bırak</span></b><br><span data-t="drop2">veya Dosya Kütüphanesi içindeki “Yeni Dosya” düğmesini kullan</span><br><small><span data-t="drop3">İnternet bağlantısı gereklidir. Tüm sayfalar alt alta görüntülenir ve metin katmanı analiz edilir.</span></small></div><div class="pages" id="pages"><div class="empty"><span data-t="empty">PDF yüklendiğinde bütün sayfalar burada görüntülenecek ve analiz edilecek.</span></div></div></main>
+<aside class="right"><div class="panel"><div class="tabs"><div class="tab active" data-tab="eq" data-t="equipment">EKİPMANLAR</div><div class="tab" data-tab="lib" data-t-html="library">DOSYA KÜTÜPHANESİ</div></div><div id="eq"><div class="count" id="eqCount"><span data-t="waiting">PDF bekleniyor</span></div><div id="equipment"></div></div><div id="lib" style="display:none"><button class="btn primary" id="newFile2" style="width:100%">+ Yeni PDF Yükle</button><div id="library"></div></div></div></aside>
+</div><div class="modal" id="modal"><div class="mh" id="mh"><span id="mt"></span><button class="mini" id="mx">×</button></div><div class="mb" id="mb"></div></div><div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id); let PDFJS=null,total=0,currentFileName="",currentElements=[],currentEquipment=[],pageTexts=[],pageTextItems=[],pageViewports=[],OCR=null,ocrLoading=null,nm=localStorage.aheName||"Çarkçım";
+const cdns=[
+ ["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js","https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"],
+ ["https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js","https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"],
+ ["https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js","https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js"]
+];
+function loadScript(src){return new Promise((ok,bad)=>{let s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=bad;document.head.appendChild(s)})}
+async function initPDF(){for(let i=0;i<cdns.length;i++){try{$("status").textContent=L("pdfConnecting",{i:i+1});await loadScript(cdns[i][0]);if(window.pdfjsLib){PDFJS=window.pdfjsLib;PDFJS.GlobalWorkerOptions.workerSrc=cdns[i][1];$("status").textContent="PDF motoru hazır — dosya seçebilirsin";return true}}catch(e){}}$("status").textContent=L("pdfFail");return false}
+initPDF();
+const ocrCdns=[
+ "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js",
+ "https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"
+];
+async function initOCR(){
+ if(window.Tesseract){OCR=window.Tesseract;return true}
+ if(ocrLoading)return ocrLoading;
+ ocrLoading=(async()=>{for(let src of ocrCdns){try{await loadScript(src);if(window.Tesseract){OCR=window.Tesseract;return true}}catch(e){}}return false})();
+ return ocrLoading;
+}
+
+function toast(s){$("toast").textContent=s;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",1800)}
+function show(t,b){$("mt").textContent=t;$("mb").innerHTML=b;$("modal").style.display="block";$("modal").style.left=Math.max(10,innerWidth/2-195)+"px";$("modal").style.top=Math.max(120,innerHeight/2-170)+"px"} $("mx").onclick=()=>$("modal").style.display="none";
+const typeMap={F:"Sigorta",FU:"Sigorta",Q:"Şalter/Kesici",QF:"Kesici",K:"Röle",KA:"Röle",KM:"Kontaktör",KT:"Zaman Rölesi",M:"Motor",S:"Anahtar/Sensör",B:"Sensör",X:"Terminal/Klemens",R:"Direnç",C:"Kondansatör",D:"Diyot",H:"Lamba/Gösterge",T:"Trafo",PS:"Güç Kaynağı",CB:"Devre Kesici",PLC:"PLC"};
+const refRe=/\b(FU|QF|KM|KA|KT|PLC|CB|PS|F|Q|K|M|S|B|X|R|C|D|H|T)[-_ ]?\d{1,4}[A-Z]?(?:[.:/-]\d{1,4}[A-Z]?)?\b/gi;
+const equipmentRules=[
+ ["Generator",/\b(generator|genset|jenerat[oö]r)\b/i],["Main Engine",/\b(main engine|ana makine|main motor)\b/i],["Pump",/\b(pump|pompa)\b/i],["Fan",/\b(fan|blower|extract fan)\b/i],["Compressor",/\b(compressor|kompres[oö]r)\b/i],["Battery Charger",/\b(battery charger|ak[uü] şarj|charger)\b/i],["Battery",/\b(battery|ak[uü])\b/i],["Bow Thruster",/\b(bow thruster|ba[sş] pervane)\b/i],["Stern Thruster",/\b(stern thruster)\b/i],["Steering",/\b(steering|rudder|d[uü]men)\b/i],["Fire Pump",/\b(fire pump|yangın pompa)\b/i],["Bilge Pump",/\b(bilge pump|sintine pompa)\b/i],["Watermaker",/\b(watermaker|reverse osmosis)\b/i],["Air Conditioning",/\b(air conditioning|a\/c|chiller|frigomar)\b/i],["Fuel System",/\b(fuel transfer|fuel pump|yakıt)\b/i],["PLC",/\bPLC\b/i],["Distribution Panel",/\b(distribution panel|switchboard|MDB|MSB|panel)\b/i],["Inverter",/\b(inverter)\b/i],["Transformer",/\b(transformer|trafo)\b/i],["Shore Power",/\b(shore power|sahil besleme)\b/i]
+];
+function normalizeRef(x){return x.toUpperCase().replace(/\s+/g,"").replace(/_/g,"-")}
+function refType(r){let p=(r.match(/^[A-Z]+/)||["?"])[0];return typeMap[p]||"Devre Elemanı"}
+function cleanOCRText(t){
+ return (t||"").replace(/[|]{2,}/g," | ").replace(/\s{2,}/g," ").trim();
+}
+function validRef(r){
+ let z=normalizeRef(r).replace(/\s/g,"");
+ if(!/^(FU|QF|KM|KA|KT|PLC|CB|PS|F|Q|K|M|S|B|X|R|C|D|H|T)[-_]?\d{1,4}[A-Z]?(?:[.:/-]\d{1,4}[A-Z]?)?$/i.test(z)) return false;
+ let m=z.match(/^([A-Z]+)[-_]?(\d+)$/);
+ if(m && m[1].length===1 && m[2].length>=3 && /^([0-9])\2+$/.test(m[2])) return false;
+ return true;
+}
+function cleanEquipmentName(t){
+ let x=cleanOCRText(t);
+ let parts=x.split(/\s*[|;]\s*/).map(v=>v.trim()).filter(Boolean);
+ x=parts[0]||x;
+ if(x.length>72)x=x.slice(0,72).replace(/\s+\S*$/,"")+"…";
+ return x;
+}
+
+function analyzePage(text,page,emap,qmap){text=cleanOCRText(text);let refs=(text.match(refRe)||[]).filter(validRef);refs.forEach(raw=>{let r=normalizeRef(raw);if(!emap.has(r))emap.set(r,{ref:r,type:refType(r),pages:new Set});emap.get(r).pages.add(page)});
+let lines=text.split(/\s{2,}|\n/).map(x=>x.trim()).filter(x=>x.length>2&&x.length<100);
+equipmentRules.forEach(([kind,re])=>{if(re.test(text)){let candidates=lines.filter(l=>re.test(l)).slice(0,5);if(!candidates.length)candidates=[kind];candidates.forEach(c=>{let name=cleanEquipmentName(c);if(!name||name.length>70)name=kind;if(!qmap.has(name))qmap.set(name,{name,kind,pages:new Set});qmap.get(name).pages.add(page)})}})}
+function renderResults(emap,qmap){currentElements=[...emap.values()].sort((a,b)=>a.ref.localeCompare(b.ref,undefined,{numeric:true}));currentEquipment=[...qmap.values()].sort((a,b)=>a.name.localeCompare(b.name));
+$("elCount").textContent=L("foundEl",{n:currentElements.length});$("eqCount").textContent=L("foundEq",{n:currentEquipment.length});
+$("elements").innerHTML=currentElements.length?currentElements.map((e,i)=>`<div class="item" data-e="${i}"><b>${e.ref}</b> — ${e.type}<br><small>Sayfa: ${[...e.pages].join(", ")}</small></div>`).join(""):`<div class="count">Devre elemanlarını çıkarmak için ŞEMAYI TARA düğmesine bas.</div>`;
+$("equipment").innerHTML=currentEquipment.length?currentEquipment.map((e,i)=>`<div class="item" data-q="${i}"><b>${esc(e.name)}</b><br><small>${e.kind} • Sayfa: ${[...e.pages].join(", ")}</small></div>`).join(""):`<div class="count">${L("eqEmpty")}</div>`;
+document.querySelectorAll("[data-e]").forEach(x=>x.onclick=()=>{let e=currentElements[+x.dataset.e],p=[...e.pages][0];highlightRef(e.ref,p);document.querySelectorAll("[data-e]").forEach(y=>y.classList.remove("active"));x.classList.add("active")});
+document.querySelectorAll("[data-q]").forEach(x=>x.onclick=()=>{let e=currentEquipment[+x.dataset.q];jump([...e.pages][0]);show(e.name,`<b>Sınıf:</b> ${e.kind}<br><b>Bulunduğu sayfalar:</b> ${[...e.pages].join(", ")}`)})}
+function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+
+function highlightRef(ref,p){
+ const card=document.querySelector(`.page[data-page="${p}"]`); if(!card)return;
+ $("modal").style.display="none"; document.querySelectorAll(".refMark").forEach(m=>m.remove());
+ const items=pageTextItems[p]||[],vp=pageViewports[p],canvas=card.querySelector("canvas"),layer=card.querySelector(".markLayer");
+ if(!vp||!canvas||!layer)return;
+ const target=normalizeRef(ref), compact=x=>normalizeRef(x||"").replace(/[^A-Z0-9]/g,"");
+ const targetCompact=compact(ref); let groups=[];
+
+ // Exact item
+ items.forEach(it=>{if(normalizeRef(it.str||"")===target)groups.push([it])});
+
+ // Sequential fragmented items (K5 + . + 23, etc.)
+ if(!groups.length){
+  for(let i=0;i<items.length;i++){
+   let grp=[],joined="";
+   for(let j=i;j<Math.min(items.length,i+10);j++){
+    let z=compact(items[j].str); if(!z)continue;
+    grp.push(items[j]); joined+=z;
+    if(joined===targetCompact){groups.push([...grp]);break}
+    if(joined.length>targetCompact.length+4)break;
+   }
+  }
+ }
+
+ // Geometry-aware search: join nearby text fragments regardless of PDF storage order.
+ if(!groups.length){
+   const geom=items.map((it,i)=>{
+     const tr=PDFJS.Util.transform(vp.transform,it.transform);
+     return {it,i,x:tr[4],y:tr[5],txt:compact(it.str)};
+   }).filter(o=>o.txt);
+   for(const a of geom){
+     const candidates=[
+       geom.filter(b=>Math.abs(b.y-a.y)<24 && Math.abs(b.x-a.x)<220).sort((u,v)=>u.x-v.x),
+       geom.filter(b=>Math.abs(b.x-a.x)<24 && Math.abs(b.y-a.y)<220).sort((u,v)=>v.y-u.y)
+     ];
+     for(const near of candidates){
+       for(let i=0;i<near.length;i++){
+         let joined="",grp=[];
+         for(let j=i;j<Math.min(near.length,i+10);j++){
+           joined+=near[j].txt;grp.push(near[j].it);
+           if(joined===targetCompact){groups.push([...grp]);break}
+           if(joined.length>targetCompact.length+5)break;
+         }
+         if(groups.length)break;
+       }
+       if(groups.length)break;
+     }
+     if(groups.length)break;
+   }
+ }
+
+ // Embedded / punctuation-insensitive item
+ if(!groups.length)items.forEach(it=>{let z=compact(it.str);if(z&&z.includes(targetCompact))groups.push([it])});
+
+ if(!groups.length){
+   card.scrollIntoView({behavior:"smooth",block:"center"}); $("badge").textContent=`SAYFA ${p}/${total}`;
+   toast(ref+" — PDF metninde konum yok. OCR görüntü taraması başlıyor…");
+   ocrHighlight(ref,p,canvas,layer);
+   return;
+ }
+
+ const sx=canvas.clientWidth/canvas.width,sy=canvas.clientHeight/canvas.height;let marks=[];
+ groups.slice(0,12).forEach(grp=>{
+  let boxes=grp.map(it=>{const tr=PDFJS.Util.transform(vp.transform,it.transform),fs=Math.max(Math.hypot(tr[2],tr[3]),8);
+   const x=tr[4]*sx,base=(canvas.height-tr[5])*sy,w=Math.max((it.width||10)*vp.scale*sx,8),h=Math.max(fs*sy,12);
+   return {l:x,t:base-h*1.15,r:x+w,b:base+h*.28};});
+  let l=Math.min(...boxes.map(b=>b.l)),t=Math.min(...boxes.map(b=>b.t)),r=Math.max(...boxes.map(b=>b.r)),b=Math.max(...boxes.map(b=>b.b));
+  // Expand around the reference so the nearby electrical symbol is visible too.
+  let px=Math.max(12,(r-l)*.55),py=Math.max(10,(b-t)*.9),m=document.createElement("div");m.className="refMark";
+  m.style.left=Math.max(0,l-px)+"px";m.style.top=Math.max(0,t-py)+"px";
+  m.style.width=Math.min(canvas.clientWidth-Math.max(0,l-px),(r-l)+2*px)+"px";m.style.height=((b-t)+2*py)+"px";
+  layer.appendChild(m);marks.push(m);
+ });
+ setTimeout(()=>{marks[0]?.scrollIntoView({behavior:"smooth",block:"center",inline:"center"});$("badge").textContent=`SAYFA ${p}/${total}`},150);
+ setTimeout(()=>$("badge").textContent=`SAYFA ${p}/${total}`,700);
+ toast(ref+" işaretlendi — Sayfa "+p+(marks.length>1?` • ${marks.length} eşleşme`:""));
+}
+async function ocrHighlight(ref,p,canvas,layer){
+ let hi=null;
+ try{
+  const ok=await initOCR();
+  if(!ok){toast(ref+" — OCR motoruna bağlanılamadı. Doğru sayfa açıldı.");return}
+  $("status").textContent=`YÜKSEK ÇÖZÜNÜRLÜKLÜ OCR HAZIRLANIYOR — ${ref} • Sayfa ${p}/${total}`;
+
+  // Re-render the PDF page at high resolution only for OCR.
+  // This is independent of the smaller on-screen canvas.
+  const srcItems=pageTextItems[p]||[];
+  const scaleFactor=3.6;
+  // Reuse current PDF viewport geometry to create a high-res copy of the displayed page.
+  const baseVp=pageViewports[p];
+  const hiScale=scaleFactor;
+  hi=document.createElement("canvas");
+  hi.width=Math.round(canvas.width*hiScale);
+  hi.height=Math.round(canvas.height*hiScale);
+  const hctx=hi.getContext("2d",{willReadFrequently:true});
+  hctx.imageSmoothingEnabled=true;
+  hctx.imageSmoothingQuality="high";
+  hctx.drawImage(canvas,0,0,hi.width,hi.height);
+
+  // Increase local contrast for thin schematic lettering.
+  try{
+   let im=hctx.getImageData(0,0,hi.width,hi.height),d=im.data;
+   for(let i=0;i<d.length;i+=4){
+    let g=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+    let v=g<205?Math.max(0,(g-128)*1.45+128):Math.min(255,(g-128)*1.18+128);
+    d[i]=d[i+1]=d[i+2]=v;
+   }
+   hctx.putImageData(im,0,0);
+  }catch(e){}
+
+  const compact=t=>normalizeRef(t||"").replace(/[^A-Z0-9]/g,"");
+  const target=compact(ref);
+  const variants=new Set([target]);
+  // Common OCR confusions in electrical references.
+  variants.add(target.replace(/O/g,"0")); variants.add(target.replace(/0/g,"O"));
+  variants.add(target.replace(/I/g,"1")); variants.add(target.replace(/1/g,"I"));
+  variants.add(target.replace(/S/g,"5")); variants.add(target.replace(/5/g,"S"));
+
+  let result=ocrCache[p];
+  if(!result){
+   result=await OCR.recognize(hi,"eng",{
+    logger:m=>{if(m.status==="recognizing text"&&typeof m.progress==="number")
+     $("status").textContent=`YÜKSEK ÇÖZÜNÜRLÜKLÜ OCR — ${ref} • %${Math.round(m.progress*100)}`;}
+   });
+   ocrCache[p]=result;
+  }else{
+   $("status").textContent=`OCR ÖNBELLEĞİ — ${ref} • Sayfa ${p}/${total}`;
+  }
+
+  const words=(result.data&&result.data.words)||[];
+  let candidates=[];
+  function scoreText(txt){
+   let z=compact(txt); if(!z)return 0;
+   if(variants.has(z))return 100;
+   if(z.includes(target)||target.includes(z))return 82;
+   // one-character tolerant comparison
+   if(Math.abs(z.length-target.length)<=1){
+    let a=z,b=target,n=Math.min(a.length,b.length),diff=Math.abs(a.length-b.length);
+    for(let i=0;i<n;i++)if(a[i]!==b[i])diff++;
+    if(diff<=1)return 70;
+   }
+   return 0;
+  }
+  words.forEach((w,i)=>{
+   let sc=scoreText(w.text);if(sc)candidates.push({words:[w],score:sc+(w.confidence||0)/10});
+   let joined="",grp=[];
+   for(let j=i;j<Math.min(words.length,i+6);j++){
+    let z=compact(words[j].text);if(!z)continue;joined+=z;grp.push(words[j]);
+    let js=scoreText(joined);
+    if(js)candidates.push({words:[...grp],score:js+grp.reduce((a,b)=>a+(b.confidence||0),0)/(10*grp.length)});
+    if(joined.length>target.length+3)break;
+   }
+  });
+  candidates.sort((a,b)=>b.score-a.score);
+  if(!candidates.length){
+   $("status").textContent=`OCR tamamlandı — ${ref} görüntüde kesin bulunamadı`;
+   toast(ref+" — Sayfa "+p+" doğru; yüksek çözünürlüklü OCR kesin konumu bulamadı.");
+   return;
+  }
+
+  document.querySelectorAll(".refMark").forEach(m=>m.remove());
+  const c=candidates[0],boxes=c.words.map(w=>w.bbox);
+  let l=Math.min(...boxes.map(b=>b.x0))/hiScale,t=Math.min(...boxes.map(b=>b.y0))/hiScale,
+      r=Math.max(...boxes.map(b=>b.x1))/hiScale,b=Math.max(...boxes.map(b=>b.y1))/hiScale;
+  const sx=canvas.clientWidth/canvas.width,sy=canvas.clientHeight/canvas.height;
+  l*=sx;r*=sx;t*=sy;b*=sy;
+  let px=Math.max(15,(r-l)*.9),py=Math.max(13,(b-t)*1.5);
+  let mark=document.createElement("div");mark.className="refMark";
+  mark.style.left=Math.max(0,l-px)+"px";mark.style.top=Math.max(0,t-py)+"px";
+  mark.style.width=Math.min(canvas.clientWidth-Math.max(0,l-px),(r-l)+2*px)+"px";
+  mark.style.height=((b-t)+2*py)+"px";layer.appendChild(mark);
+  setTimeout(()=>mark.scrollIntoView({behavior:"smooth",block:"center",inline:"center"}),120);
+  $("badge").textContent=`SAYFA ${p}/${total}`;
+  $("status").textContent=`OCR BULDU — ${ref} • Sayfa ${p}/${total}`;
+  toast(ref+" yüksek çözünürlüklü OCR ile bulundu ve işaretlendi.");
+ }catch(err){
+  $("status").textContent=`OCR tamamlanamadı — Sayfa ${p}/${total}`;
+  toast(ref+" — yüksek çözünürlüklü OCR tamamlanamadı; doğru sayfa açık.");
+ }finally{hi=null}
+}
+function jump(n){document.querySelector(`.page[data-page="${n}"]`)?.scrollIntoView({behavior:"smooth",block:"start"});$("modal").style.display="none"}
+
+async function ocrAnalyzeRenderedPage(canvas,page,emap,qmap){
+ try{
+  const ok=await initOCR(); if(!ok)return false;
+  $("status").textContent=`OCR ANALİZİ — Sayfa ${page}/${total}`;
+  // High-resolution enlargement: improves tiny electrical labels on scanned/image PDFs.
+  const maxPixels=14000000, desired=3.2;
+  let sc=Math.min(desired,Math.sqrt(maxPixels/(canvas.width*canvas.height)));
+  sc=Math.max(1.8,sc);
+  let hi=document.createElement("canvas");
+  hi.width=Math.round(canvas.width*sc); hi.height=Math.round(canvas.height*sc);
+  let cx=hi.getContext("2d",{willReadFrequently:true});
+  cx.imageSmoothingEnabled=true; cx.imageSmoothingQuality="high";
+  cx.drawImage(canvas,0,0,hi.width,hi.height);
+  let res=await OCR.recognize(hi,"eng",{
+   logger:m=>{if(m.status==="recognizing text"&&typeof m.progress==="number")
+    $("status").textContent=`OCR ANALİZİ — Sayfa ${page}/${total} • %${Math.round(m.progress*100)}`;}
+  });
+  let words=(res.data&&res.data.words)||[];
+  // Keep OCR words in reading order and also build geometry-aware nearby combinations.
+  let raw=(res.data&&res.data.text)||words.map(w=>w.text).join(" ");
+  let combos=[];
+  for(let i=0;i<words.length;i++){
+   let a=words[i], line=[a], joined=(a.text||"");
+   for(let j=i+1;j<Math.min(words.length,i+6);j++){
+    let b=words[j];
+    let sameLine=Math.abs(((a.bbox.y0+a.bbox.y1)/2)-((b.bbox.y0+b.bbox.y1)/2))<Math.max(18,(a.bbox.y1-a.bbox.y0)*1.2);
+    let gap=b.bbox.x0-line[line.length-1].bbox.x1;
+    if(!sameLine||gap>Math.max(80,(a.bbox.y1-a.bbox.y0)*4))break;
+    joined+=" "+(b.text||""); line.push(b); combos.push(joined);
+   }
+  }
+  let text=(raw+" "+combos.join(" ")).replace(/[|]/g,"I");
+  pageTexts[page]=((pageTexts[page]||"")+" "+text).trim();
+  analyzePage(text,page,emap,qmap);
+  hi.width=1;hi.height=1;
+  return true;
+ }catch(e){ return false; }
+}
+
+
+async function analyzeVisiblePageOCR(page){
+ if(!page||visibleOcrDone[page]||visibleOcrBusy[page]||!globalEmap||!globalQmap)return;
+ const wrap=document.querySelector(`.canvasWrap[data-page="${page}"]`);
+ const canvas=wrap&&wrap.querySelector("canvas");
+ if(!canvas)return;
+ visibleOcrBusy[page]=true;
+ try{
+   const ok=await ocrAnalyzeRenderedPage(canvas,page,globalEmap,globalQmap);
+   if(ok){
+     visibleOcrDone[page]=true;
+     renderResults(globalEmap,globalQmap);
+     $("status").textContent=`HAZIR — Sayfa ${page}/${total} OCR analiz edildi`;
+   }
+ }finally{visibleOcrBusy[page]=false}
+}
+let visibleOcrTimer=null;
+function scheduleVisibleOCR(page){
+ clearTimeout(visibleOcrTimer);
+ visibleOcrTimer=setTimeout(()=>analyzeVisiblePageOCR(page),550);
+}
+function installVisibleOCR(){
+ const root=$("pages")||document;
+ if(window._analyzerObserver)window._analyzerObserver.disconnect();
+ window._analyzerObserver=new IntersectionObserver(entries=>{
+   let best=null;
+   entries.forEach(e=>{
+     if(e.isIntersecting&&(!best||e.intersectionRatio>best.intersectionRatio))best=e;
+   });
+   if(best){
+     let p=Number(best.target.dataset.page||0);
+     if(p){$("badge").textContent=`SAYFA ${p}/${total}`;scheduleVisibleOCR(p);}
+   }
+ },{root:null,threshold:[.25,.45,.65,.85]});
+ document.querySelectorAll(".canvasWrap[data-page]").forEach(x=>window._analyzerObserver.observe(x));
+}
+
+const UI_LANG={
+en:{openFile:"Open file",allFilesFound:"Related equipment was found in the scanned files:",allFilesTitle:"ALL FILES — EQUIPMENT RESULTS",savedScanLoaded:"Saved scan loaded",foundEl:"{n} elements found",foundEq:"{n} equipment/heading found",eqEmpty:"The equipment list is created when SCAN SCHEMATIC is started.",scanStatus:"SCANNING SCHEMATIC — Page {p}/{t}",scanDone:"SCHEMATIC SCAN COMPLETE — {e} circuit elements • {q} equipment/headings",scanStopped:"Schematic scan stopped",scanFail:"Schematic scan could not be completed.",needPdf:"Load a PDF schematic first.",pdfConnecting:"Connecting PDF engine ({i}/3)…",pdfFail:"Could not connect to PDF engine — check internet/CDN access",analyzing:"ANALYZING — Page {p}/{t}",done:"COMPLETE — {t} pages • {e} circuit elements • {q} equipment/headings",analysisDone:"Analysis complete",pdfOpenFail:"PDF could not be opened",page:"PAGE",libraryEmpty:"Library is empty.",delete:"Delete",newPdf:"+ Upload New PDF",openLib:"Opening schematic from library…",wrongPdf:"Select a PDF in this version.",connectionError:"Connection Error",ocrAnalysis:"OCR ANALYSIS",ocrFound:"OCR FOUND",ready:"READY",sub:"Electrical Schematic Analysis",chief:"Chief Engineer Aygün Gürcan",greet:"Welcome, Chief Engineer 👋",scan:"SCAN SCHEMATIC",elements:"CIRCUIT ELEMENTS",equipment:"EQUIPMENT",library:"FILE<br>LIBRARY",newf:"New File",name:"Name",fault:"Chief Engineer, please describe the fault on this line.",ph:"E.g. Generator No.1 will not start — Enter",viewer:"SCHEMATIC VIEWER",pdfReady:"PDF engine ready — select a file",drop1:"Drag and drop the PDF electrical schematic here",drop2:"or use “Upload New PDF” in File Library",drop3:"Internet connection is required. All pages are displayed vertically and the text layer is analyzed.",empty:"When a PDF is loaded, all pages will be displayed and analyzed here.",waiting:"Waiting for PDF",page:"PAGE",scanning:"SCANNING",complete:"SCHEMATIC SCAN COMPLETE"},
+de:{openFile:"Datei öffnen",allFilesFound:"Passende Geräte wurden in den gescannten Dateien gefunden:",allFilesTitle:"ALLE DATEIEN — GERÄTEERGEBNISSE",savedScanLoaded:"Gespeicherter Scan geladen",foundEl:"{n} Elemente gefunden",foundEq:"{n} Geräte/Überschriften gefunden",eqEmpty:"Die Geräteliste wird beim Start von SCHALTPLAN SCANNEN erstellt.",scanStatus:"SCHALTPLAN WIRD GESCANNT — Seite {p}/{t}",scanDone:"SCHALTPLANSCAN ABGESCHLOSSEN — {e} Schaltelemente • {q} Geräte/Überschriften",scanStopped:"Schaltplanscan gestoppt",scanFail:"Schaltplanscan konnte nicht abgeschlossen werden.",needPdf:"Zuerst einen PDF-Schaltplan laden.",pdfConnecting:"PDF-Modul wird verbunden ({i}/3)…",pdfFail:"Verbindung zum PDF-Modul fehlgeschlagen — Internet/CDN prüfen",analyzing:"ANALYSE — Seite {p}/{t}",done:"ABGESCHLOSSEN — {t} Seiten • {e} Schaltelemente • {q} Geräte/Überschriften",analysisDone:"Analyse abgeschlossen",pdfOpenFail:"PDF konnte nicht geöffnet werden",page:"SEITE",libraryEmpty:"Bibliothek ist leer.",delete:"Löschen",newPdf:"+ Neue PDF hochladen",openLib:"Schaltplan wird aus der Bibliothek geöffnet…",wrongPdf:"Bitte eine PDF-Datei auswählen.",connectionError:"Verbindungsfehler",ocrAnalysis:"OCR-ANALYSE",ocrFound:"OCR GEFUNDEN",ready:"BEREIT",sub:"Analyse elektrischer Schaltpläne",chief:"Leitender Ingenieur Aygün Gürcan",greet:"Willkommen, Leitender Ingenieur 👋",scan:"SCHALTPLAN SCANNEN",elements:"SCHALTELEMENTE",equipment:"AUSRÜSTUNG",library:"DATEI<br>BIBLIOTHEK",newf:"Neue Datei",name:"Name",fault:"Bitte beschreiben Sie den Fehler in dieser Zeile.",ph:"Z. B. Generator Nr. 1 startet nicht — Enter",viewer:"SCHALTPLANANSICHT",pdfReady:"PDF-Modul bereit — Datei auswählen",drop1:"PDF-Schaltplan hierher ziehen",drop2:"oder „Neue PDF hochladen“ in der Dateibibliothek verwenden",drop3:"Internetverbindung erforderlich. Alle Seiten werden untereinander angezeigt und die Textebene analysiert.",empty:"Nach dem Laden werden alle PDF-Seiten hier angezeigt und analysiert.",waiting:"Warte auf PDF",page:"SEITE",scanning:"WIRD GESCANNT",complete:"SCHALTPLANSCAN ABGESCHLOSSEN"},
+it:{openFile:"Apri file",allFilesFound:"Sono state trovate apparecchiature correlate nei file scansionati:",allFilesTitle:"TUTTI I FILE — RISULTATI APPARECCHIATURE",savedScanLoaded:"Scansione salvata caricata",foundEl:"{n} elementi trovati",foundEq:"{n} apparecchiature/intestazioni trovate",eqEmpty:"L\"elenco apparecchiature viene creato avviando SCANSIONA SCHEMA.",scanStatus:"SCANSIONE SCHEMA — Pagina {p}/{t}",scanDone:"SCANSIONE COMPLETATA — {e} elementi • {q} apparecchiature/intestazioni",scanStopped:"Scansione interrotta",scanFail:"Impossibile completare la scansione.",needPdf:"Carica prima uno schema PDF.",pdfConnecting:"Connessione al motore PDF ({i}/3)…",pdfFail:"Impossibile collegarsi al motore PDF — controlla Internet/CDN",analyzing:"ANALISI — Pagina {p}/{t}",done:"COMPLETATO — {t} pagine • {e} elementi • {q} apparecchiature/intestazioni",analysisDone:"Analisi completata",pdfOpenFail:"Impossibile aprire il PDF",page:"PAGINA",libraryEmpty:"La libreria è vuota.",delete:"Elimina",newPdf:"+ Carica nuovo PDF",openLib:"Apertura schema dalla libreria…",wrongPdf:"Seleziona un PDF.",connectionError:"Errore di connessione",ocrAnalysis:"ANALISI OCR",ocrFound:"OCR TROVATO",ready:"PRONTO",sub:"Analisi Schema Elettrico",chief:"Direttore di Macchina Aygün Gürcan",greet:"Benvenuto, Direttore 👋",scan:"SCANSIONA SCHEMA",elements:"ELEMENTI DEL CIRCUITO",equipment:"APPARECCHIATURE",library:"LIBRERIA<br>FILE",newf:"Nuovo File",name:"Nome",fault:"Descrivi il guasto in questa riga.",ph:"Es. Generatore N.1 non si avvia — Invio",viewer:"VISUALIZZAZIONE SCHEMA",pdfReady:"Motore PDF pronto — seleziona un file",drop1:"Trascina qui lo schema elettrico PDF",drop2:"oppure usa “Carica nuovo PDF” nella Libreria file",drop3:"È richiesta una connessione Internet. Tutte le pagine vengono visualizzate verticalmente e il livello testo viene analizzato.",empty:"Dopo il caricamento, tutte le pagine PDF saranno visualizzate e analizzate qui.",waiting:"In attesa del PDF",page:"PAGINA",scanning:"SCANSIONE",complete:"SCANSIONE SCHEMA COMPLETATA"},
+fr:{openFile:"Ouvrir le fichier",allFilesFound:"Des équipements associés ont été trouvés dans les fichiers analysés :",allFilesTitle:"TOUS LES FICHIERS — RÉSULTATS ÉQUIPEMENTS",savedScanLoaded:"Analyse enregistrée chargée",foundEl:"{n} éléments trouvés",foundEq:"{n} équipements/titres trouvés",eqEmpty:"La liste des équipements est créée au lancement de ANALYSER LE SCHÉMA.",scanStatus:"ANALYSE DU SCHÉMA — Page {p}/{t}",scanDone:"ANALYSE TERMINÉE — {e} éléments • {q} équipements/titres",scanStopped:"Analyse arrêtée",scanFail:"Impossible de terminer l\"analyse.",needPdf:"Chargez d\"abord un schéma PDF.",pdfConnecting:"Connexion au moteur PDF ({i}/3)…",pdfFail:"Connexion au moteur PDF impossible — vérifiez Internet/CDN",analyzing:"ANALYSE — Page {p}/{t}",done:"TERMINÉ — {t} pages • {e} éléments • {q} équipements/titres",analysisDone:"Analyse terminée",pdfOpenFail:"Impossible d\"ouvrir le PDF",page:"PAGE",libraryEmpty:"La bibliothèque est vide.",delete:"Supprimer",newPdf:"+ Charger un nouveau PDF",openLib:"Ouverture du schéma depuis la bibliothèque…",wrongPdf:"Sélectionnez un PDF.",connectionError:"Erreur de connexion",ocrAnalysis:"ANALYSE OCR",ocrFound:"OCR TROUVÉ",ready:"PRÊT",sub:"Analyse de Schéma Électrique",chief:"Chef Mécanicien Aygün Gürcan",greet:"Bienvenue, Chef Mécanicien 👋",scan:"ANALYSER LE SCHÉMA",elements:"ÉLÉMENTS DU CIRCUIT",equipment:"ÉQUIPEMENTS",library:"BIBLIOTHÈQUE<br>DE FICHIERS",newf:"Nouveau fichier",name:"Nom",fault:"Décrivez la panne sur cette ligne.",ph:"Ex. Le générateur N°1 ne démarre pas — Entrée",viewer:"AFFICHAGE DU SCHÉMA",pdfReady:"Moteur PDF prêt — sélectionnez un fichier",drop1:"Glissez-déposez le schéma électrique PDF ici",drop2:"ou utilisez « Charger un nouveau PDF » dans la bibliothèque",drop3:"Une connexion Internet est requise. Toutes les pages sont affichées verticalement et la couche texte est analysée.",empty:"Une fois chargé, toutes les pages du PDF seront affichées et analysées ici.",waiting:"En attente du PDF",page:"PAGE",scanning:"ANALYSE",complete:"ANALYSE DU SCHÉMA TERMINÉE"},
+id:{openFile:"Buka file",allFilesFound:"Peralatan terkait ditemukan di file yang telah dipindai:",allFilesTitle:"SEMUA FILE — HASIL PERALATAN",savedScanLoaded:"Pemindaian tersimpan dimuat",foundEl:"{n} elemen ditemukan",foundEq:"{n} peralatan/judul ditemukan",eqEmpty:"Daftar peralatan dibuat saat PINDAI SKEMA dimulai.",scanStatus:"MEMINDAI SKEMA — Halaman {p}/{t}",scanDone:"PEMINDAIAN SELESAI — {e} elemen • {q} peralatan/judul",scanStopped:"Pemindaian dihentikan",scanFail:"Pemindaian tidak dapat diselesaikan.",needPdf:"Muat skema PDF terlebih dahulu.",pdfConnecting:"Menghubungkan mesin PDF ({i}/3)…",pdfFail:"Tidak dapat terhubung ke mesin PDF — periksa Internet/CDN",analyzing:"MENGANALISIS — Halaman {p}/{t}",done:"SELESAI — {t} halaman • {e} elemen • {q} peralatan/judul",analysisDone:"Analisis selesai",pdfOpenFail:"PDF tidak dapat dibuka",page:"HALAMAN",libraryEmpty:"Pustaka kosong.",delete:"Hapus",newPdf:"+ Unggah PDF Baru",openLib:"Membuka skema dari pustaka…",wrongPdf:"Pilih file PDF.",connectionError:"Kesalahan Koneksi",ocrAnalysis:"ANALISIS OCR",ocrFound:"OCR DITEMUKAN",ready:"SIAP",sub:"Analisis Skema Listrik",chief:"Kepala Kamar Mesin Aygün Gürcan",greet:"Selamat datang, Chief Engineer 👋",scan:"PINDAI SKEMA",elements:"ELEMEN RANGKAIAN",equipment:"PERALATAN",library:"PUSTAKA<br>FILE",newf:"File Baru",name:"Nama",fault:"Jelaskan kerusakan pada baris ini.",ph:"Contoh: Generator No.1 tidak dapat start — Enter",viewer:"TAMPILAN SKEMA",pdfReady:"Mesin PDF siap — pilih file",drop1:"Seret dan lepas skema listrik PDF di sini",drop2:"atau gunakan “Unggah PDF Baru” di Pustaka File",drop3:"Koneksi internet diperlukan. Semua halaman ditampilkan vertikal dan lapisan teks dianalisis.",empty:"Setelah PDF dimuat, semua halaman akan ditampilkan dan dianalisis di sini.",waiting:"Menunggu PDF",page:"HALAMAN",scanning:"MEMINDAI",complete:"PEMINDAIAN SKEMA SELESAI"},
+th:{openFile:"เปิดไฟล์",allFilesFound:"พบอุปกรณ์ที่เกี่ยวข้องในไฟล์ที่สแกนแล้ว:",allFilesTitle:"ไฟล์ทั้งหมด — ผลลัพธ์อุปกรณ์",savedScanLoaded:"โหลดผลสแกนที่บันทึกแล้ว",foundEl:"พบ {n} อุปกรณ์",foundEq:"พบ {n} อุปกรณ์/หัวข้อ",eqEmpty:"รายการอุปกรณ์จะสร้างเมื่อเริ่มสแกนแผนผัง",scanStatus:"กำลังสแกนแผนผัง — หน้า {p}/{t}",scanDone:"สแกนเสร็จแล้ว — {e} อุปกรณ์ • {q} อุปกรณ์/หัวข้อ",scanStopped:"หยุดการสแกนแล้ว",scanFail:"ไม่สามารถสแกนให้เสร็จได้",needPdf:"โปรดโหลดแผนผัง PDF ก่อน",pdfConnecting:"กำลังเชื่อมต่อระบบ PDF ({i}/3)…",pdfFail:"เชื่อมต่อระบบ PDF ไม่ได้ — ตรวจสอบอินเทอร์เน็ต/CDN",analyzing:"กำลังวิเคราะห์ — หน้า {p}/{t}",done:"เสร็จแล้ว — {t} หน้า • {e} อุปกรณ์ • {q} อุปกรณ์/หัวข้อ",analysisDone:"วิเคราะห์เสร็จแล้ว",pdfOpenFail:"เปิด PDF ไม่ได้",page:"หน้า",libraryEmpty:"คลังไฟล์ว่าง",delete:"ลบ",newPdf:"+ อัปโหลด PDF ใหม่",openLib:"กำลังเปิดแผนผังจากคลัง…",wrongPdf:"โปรดเลือก PDF",connectionError:"ข้อผิดพลาดการเชื่อมต่อ",ocrAnalysis:"วิเคราะห์ OCR",ocrFound:"OCR พบ",ready:"พร้อม",sub:"วิเคราะห์แผนผังไฟฟ้า",chief:"หัวหน้าวิศวกร Aygün Gürcan",greet:"ยินดีต้อนรับ หัวหน้าวิศวกร 👋",scan:"สแกนแผนผัง",elements:"อุปกรณ์วงจร",equipment:"อุปกรณ์",library:"คลัง<br>ไฟล์",newf:"ไฟล์ใหม่",name:"ชื่อ",fault:"โปรดระบุอาการขัดข้องในบรรทัดนี้",ph:"เช่น เครื่องกำเนิดไฟฟ้า No.1 สตาร์ทไม่ติด — Enter",viewer:"ดูแผนผัง",pdfReady:"ระบบ PDF พร้อม — เลือกไฟล์",drop1:"ลากและวางแผนผังไฟฟ้า PDF ที่นี่",drop2:"หรือใช้ “อัปโหลด PDF ใหม่” ในคลังไฟล์",drop3:"ต้องเชื่อมต่ออินเทอร์เน็ต ทุกหน้าจะแสดงในแนวตั้งและวิเคราะห์ชั้นข้อความ",empty:"เมื่อโหลด PDF แล้ว ทุกหน้าจะแสดงและวิเคราะห์ที่นี่",waiting:"รอ PDF",page:"หน้า",scanning:"กำลังสแกน",complete:"สแกนแผนผังเสร็จแล้ว"},
+zh:{openFile:"打开文件",allFilesFound:"在已扫描文件中找到相关设备：",allFilesTitle:"所有文件 — 设备结果",savedScanLoaded:"已加载保存的扫描",foundEl:"找到 {n} 个电路元件",foundEq:"找到 {n} 个设备/标题",eqEmpty:"启动“扫描原理图”后将生成设备列表。",scanStatus:"正在扫描原理图 — 第 {p}/{t} 页",scanDone:"原理图扫描完成 — {e} 个元件 • {q} 个设备/标题",scanStopped:"原理图扫描已停止",scanFail:"无法完成原理图扫描。",needPdf:"请先加载 PDF 原理图。",pdfConnecting:"正在连接 PDF 引擎 ({i}/3)…",pdfFail:"无法连接 PDF 引擎 — 请检查网络/CDN",analyzing:"正在分析 — 第 {p}/{t} 页",done:"完成 — {t} 页 • {e} 个元件 • {q} 个设备/标题",analysisDone:"分析完成",pdfOpenFail:"无法打开 PDF",page:"页面",libraryEmpty:"文件库为空。",delete:"删除",newPdf:"+ 上传新 PDF",openLib:"正在从文件库打开原理图…",wrongPdf:"请选择 PDF 文件。",connectionError:"连接错误",ocrAnalysis:"OCR 分析",ocrFound:"OCR 已找到",ready:"就绪",sub:"电气原理图分析",chief:"轮机长 Aygün Gürcan",greet:"欢迎，轮机长 👋",scan:"扫描原理图",elements:"电路元件",equipment:"设备",library:"文件<br>库",newf:"新文件",name:"姓名",fault:"请在此行描述故障。",ph:"例如：1号发电机无法启动 — Enter",viewer:"原理图查看",pdfReady:"PDF 引擎已就绪 — 请选择文件",drop1:"将 PDF 电气原理图拖放到此处",drop2:"或使用文件库中的“上传新 PDF”",drop3:"需要互联网连接。所有页面纵向显示并分析文本层。",empty:"加载 PDF 后，所有页面将在此显示并分析。",waiting:"等待 PDF",page:"页面",scanning:"扫描中",complete:"原理图扫描完成"},
+ja:{openFile:"ファイルを開く",allFilesFound:"スキャン済みファイルに関連機器が見つかりました：",allFilesTitle:"全ファイル — 機器検索結果",savedScanLoaded:"保存済みスキャンを読み込みました",foundEl:"{n} 個の回路部品",foundEq:"{n} 件の機器/見出し",eqEmpty:"「回路図をスキャン」を開始すると機器リストが作成されます。",scanStatus:"回路図をスキャン中 — ページ {p}/{t}",scanDone:"回路図スキャン完了 — {e} 部品 • {q} 機器/見出し",scanStopped:"回路図スキャンを停止しました",scanFail:"回路図スキャンを完了できませんでした。",needPdf:"先に PDF 回路図を読み込んでください。",pdfConnecting:"PDFエンジン接続中 ({i}/3)…",pdfFail:"PDFエンジンに接続できません — インターネット/CDNを確認してください",analyzing:"解析中 — ページ {p}/{t}",done:"完了 — {t} ページ • {e} 部品 • {q} 機器/見出し",analysisDone:"解析完了",pdfOpenFail:"PDFを開けませんでした",page:"ページ",libraryEmpty:"ライブラリは空です。",delete:"削除",newPdf:"+ 新しいPDFをアップロード",openLib:"ライブラリから回路図を開いています…",wrongPdf:"PDFを選択してください。",connectionError:"接続エラー",ocrAnalysis:"OCR解析",ocrFound:"OCR検出",ready:"準備完了",sub:"電気回路図解析",chief:"機関長 Aygün Gürcan",greet:"ようこそ、機関長 👋",scan:"回路図をスキャン",elements:"回路部品",equipment:"機器",library:"ファイル<br>ライブラリ",newf:"新規ファイル",name:"名前",fault:"この行に故障内容を入力してください。",ph:"例：発電機 No.1 が始動しない — Enter",viewer:"回路図ビューア",pdfReady:"PDFエンジン準備完了 — ファイルを選択",drop1:"PDF電気回路図をここにドラッグ＆ドロップ",drop2:"またはファイルライブラリの「新しいPDFをアップロード」を使用",drop3:"インターネット接続が必要です。全ページを縦に表示し、テキストレイヤーを解析します。",empty:"PDFを読み込むと、すべてのページがここに表示・解析されます。",waiting:"PDF待機中",page:"ページ",scanning:"スキャン中",complete:"回路図スキャン完了"},
+tr:{openFile:"Dosyayı aç",allFilesFound:"Taranmış dosyalarda ilgili ekipman bulundu:",allFilesTitle:"TÜM DOSYALAR — EKİPMAN SONUÇLARI",savedScanLoaded:"Kayıtlı tarama yüklendi",foundEl:"{n} eleman bulundu",foundEq:"{n} ekipman/başlık bulundu",eqEmpty:"ŞEMA TARAMASI başlatıldığında ekipman listesi de oluşturulur.",scanStatus:"ŞEMA TARANIYOR — Sayfa {p}/{t}",scanDone:"ŞEMA TARAMASI TAMAMLANDI — {e} devre elemanı • {q} ekipman/başlık",scanStopped:"Şema taraması durdu",scanFail:"Şema taraması tamamlanamadı.",needPdf:"Önce bir PDF şeması yükle.",pdfConnecting:"PDF motoru bağlanıyor ({i}/3)…",pdfFail:"PDF motoruna bağlanılamadı — internet/CDN erişimini kontrol et",analyzing:"ANALİZ EDİLİYOR — Sayfa {p}/{t}",done:"TAMAMLANDI — {t} sayfa • {e} devre elemanı • {q} ekipman/başlık",analysisDone:"Analiz tamamlandı",pdfOpenFail:"PDF açılamadı",page:"SAYFA",libraryEmpty:"Kütüphane boş.",delete:"Sil",newPdf:"+ Yeni PDF Yükle",openLib:"Kütüphaneden şema açılıyor…",wrongPdf:"Bu sürümde PDF seç.",connectionError:"Bağlantı Hatası",ocrAnalysis:"OCR ANALİZİ",ocrFound:"OCR BULDU",ready:"HAZIR",sub:"Elektrik Şema Analiz",chief:"Baş Çarkçı Aygün Gürcan",greet:"Hoş geldin, Çarkçım 👋",scan:"ŞEMAYI TARA",elements:"DEVRE ELEMANLARI",equipment:"EKİPMANLAR",library:"DOSYA<br>KÜTÜPHANESİ",newf:"Yeni Dosya",name:"İsim",fault:"Merhaba Çarkçım, lütfen arızayı bu satırda belirtin.",ph:"Örn: Jeneratör No.1 start almıyor — Enter",viewer:"ŞEMA GÖRÜNTÜLEME",pdfReady:"PDF motoru hazır — dosya seçebilirsin",drop1:"PDF elektrik şemasını buraya sürükleyip bırak",drop2:"veya Dosya Kütüphanesi içindeki “Yeni Dosya” düğmesini kullan",drop3:"İnternet bağlantısı gereklidir. Tüm sayfalar alt alta görüntülenir ve metin katmanı analiz edilir.",empty:"PDF yüklendiğinde bütün sayfalar burada görüntülenecek ve analiz edilecek.",waiting:"PDF bekleniyor",page:"SAYFA",scanning:"TARANIYOR",complete:"ŞEMA TARAMASI TAMAMLANDI"}
+};
+let currentLang="en";
+function L(k,v={}){let d=UI_LANG[currentLang]||UI_LANG.en;let x=d[k]||UI_LANG.en[k]||k;return String(x).replace(/\{(\w+)\}/g,(_,a)=>v[a]??"")}
+function refreshDynamicLanguage(){
+ if(total)$("badge").textContent=L("page")+" "+(($("badge").textContent.match(/\d+/)||["1"])[0])+"/"+total;
+ if(globalEmap&&globalQmap)renderResults(globalEmap,globalQmap);
+ const nf=$("newFile2");if(nf)nf.textContent=L("newPdf");
+ document.querySelectorAll(".ph span:first-child").forEach((x,i)=>x.textContent=L("page")+" "+(i+1));
+ renderLib();
+}
+
+function setLang(code){
+ if(code==="ar")code="en";currentLang=code;const d=UI_LANG[code]||UI_LANG.en;
+ document.documentElement.lang=code;document.documentElement.dir=code==="ar"?"rtl":"ltr";
+ const $q=x=>document.querySelector(x);
+ 
+ if($q("#chiefName"))$q("#chiefName").textContent=d.chief;
+ if($q("#appSub"))$q("#appSub").textContent=d.sub;
+ 
+ if($q("#scanSchema")&&!schemaScanBusy)$q("#scanSchema").textContent=d.scan;
+ let el=$q('[data-i18n="elements"],[data-t="elements"]');if(el)el.textContent=d.elements;
+ let eq=$q('[data-i18n="equipment"],[data-t="equipment"]');if(eq)eq.textContent=d.equipment;
+ let lib=$q('[data-i18n="library"],[data-t-html="library"]');if(lib)lib.innerHTML=d.library;
+ document.querySelectorAll('[data-t]').forEach(x=>{let k=x.dataset.t;if(d[k])x.textContent=d[k]});
+ document.querySelectorAll('[data-t-html]').forEach(x=>{let k=x.dataset.tHtml;if(d[k])x.innerHTML=d[k]});
+ if($q("#newFile"))$q("#newFile").textContent=d.newf;if($q("#newFile2"))$q("#newFile2").textContent=d.newf;
+ if($q("#nameBtn"))$q("#nameBtn").textContent=d.name;
+ let lab=[...document.querySelectorAll("label,strong,b")].find(x=>x.dataset.faultlabel||/Merhaba Çarkçım|Chief Engineer|Jelaskan kerusakan|Descrivi il guasto|Décrivez la panne|Bitte beschreiben|故障|อาการขัดข้อง|العطل/.test(x.textContent));
+ if(lab){lab.dataset.faultlabel="1";lab.textContent=d.fault}
+ if($q("#fault"))$q("#fault").placeholder=d.ph;
+ const ll=$q("#langLabel");if(ll)ll.textContent=code==="tr"?"Dil":"Language";
+ localStorage.setItem("analyzer_lang",code);setTimeout(refreshDynamicLanguage,0);
+}
+
+let schemaScanBusy=false;
+async function scanWholeSchema(){
+ if(schemaScanBusy){toast("Şema taraması devam ediyor.");return}
+ if(!total||!globalEmap||!globalQmap){toast(L("needPdf"));return}
+ schemaScanBusy=true;
+ const btn=$("scanSchema");btn.disabled=true;btn.textContent=(UI_LANG[currentLang]||UI_LANG.en).scanning+"…";
+ try{
+  for(let p=1;p<=total;p++){
+   if(visibleOcrDone[p])continue;
+   const card=document.querySelector(`.page[data-page="${p}"]`);
+   const canvas=card&&card.querySelector("canvas");
+   if(!canvas)continue;
+   btn.textContent=`${(UI_LANG[currentLang]||UI_LANG.en).scanning} ${p}/${total}`;
+   $("status").textContent=L("scanStatus",{p:p,t:total});
+   const ok=await ocrAnalyzeRenderedPage(canvas,p,globalEmap,globalQmap);
+   if(ok){visibleOcrDone[p]=true;renderResults(globalEmap,globalQmap)}
+   await new Promise(r=>setTimeout(r,20));
+  }
+  $("status").textContent=L("scanDone",{e:globalEmap.size,q:globalQmap.size});
+  await saveScanCache(currentFileName,globalEmap,globalQmap);
+  toast("Şema taraması tamamlandı.");
+ }catch(e){
+  $("status").textContent=L("scanStopped");toast(L("scanFail"));
+ }finally{schemaScanBusy=false;btn.disabled=false;btn.textContent=(UI_LANG[currentLang]||UI_LANG.en).scan}
+}
+
+
+const LIB_DB="ANALYZER_PDF_LIBRARY", LIB_STORE="pdfs";
+function openLibDB(){
+ return new Promise((resolve,reject)=>{
+  const q=indexedDB.open(LIB_DB,1);
+  q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains(LIB_STORE))q.result.createObjectStore(LIB_STORE,{keyPath:"name"})};
+  q.onsuccess=()=>resolve(q.result); q.onerror=()=>reject(q.error);
+ });
+}
+async function storeLibraryFile(file){
+ try{
+  const db=await openLibDB(),tx=db.transaction(LIB_STORE,"readwrite");
+  tx.objectStore(LIB_STORE).put({name:file.name,type:file.type||"application/pdf",size:file.size,time:Date.now(),blob:file});
+  await new Promise((ok,bad)=>{tx.oncomplete=ok;tx.onerror=()=>bad(tx.error)});
+ }catch(e){console.warn("Library store:",e)}
+}
+async function getLibraryFile(name){
+ const db=await openLibDB(),tx=db.transaction(LIB_STORE,"readonly"),q=tx.objectStore(LIB_STORE).get(name);
+ const row=await new Promise((ok,bad)=>{q.onsuccess=()=>ok(q.result);q.onerror=()=>bad(q.error)});
+ if(!row||!row.blob)throw new Error("Dosya kütüphanede bulunamadı.");
+ return new File([row.blob],row.name,{type:row.type||"application/pdf",lastModified:row.time||Date.now()});
+}
+async function deleteLibraryFile(name){
+ try{const db=await openLibDB(),tx=db.transaction(LIB_STORE,"readwrite");tx.objectStore(LIB_STORE).delete(name);
+ await new Promise((ok,bad)=>{tx.oncomplete=ok;tx.onerror=()=>bad(tx.error)})}catch(e){}
+}
+window.openLibFile=async name=>{
+ try{toast(L("openLib"));const f=await getLibraryFile(name);await handle([f],true)}
+ catch(e){toast("Şema açılamadı: "+(e.message||e))}
+};
+
+
+/* ANALYZER persistent scan memory */
+const ANALYSIS_DB="ANALYZER_ANALYSIS_CACHE", ANALYSIS_STORE="scans";
+function openAnalysisDB(){return new Promise((resolve,reject)=>{const q=indexedDB.open(ANALYSIS_DB,1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains(ANALYSIS_STORE))q.result.createObjectStore(ANALYSIS_STORE,{keyPath:"name"})};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)})}
+function packMap(m){return [...m.entries()].map(([k,v])=>[k,{...v,pages:[...(v.pages||[])]}])}
+function unpackMap(rows){let m=new Map();(rows||[]).forEach(([k,v])=>m.set(k,{...v,pages:new Set(v.pages||[])}));return m}
+async function saveScanCache(name,emap,qmap){try{const db=await openAnalysisDB(),tx=db.transaction(ANALYSIS_STORE,"readwrite");tx.objectStore(ANALYSIS_STORE).put({name,time:Date.now(),version:2,elements:packMap(emap),equipment:packMap(qmap),pages:(pageTexts||[]).map(x=>String(x||"").slice(0,120000))});await new Promise((ok,bad)=>{tx.oncomplete=ok;tx.onerror=()=>bad(tx.error)})}catch(e){console.warn(e)}}
+async function loadScanCache(name){try{const db=await openAnalysisDB(),tx=db.transaction(ANALYSIS_STORE,"readonly"),q=tx.objectStore(ANALYSIS_STORE).get(name);return await new Promise((ok,bad)=>{q.onsuccess=()=>ok(q.result||null);q.onerror=()=>bad(q.error)})}catch(e){return null}}
+async function allScanCaches(){try{const db=await openAnalysisDB(),tx=db.transaction(ANALYSIS_STORE,"readonly"),q=tx.objectStore(ANALYSIS_STORE).getAll();return await new Promise((ok,bad)=>{q.onsuccess=()=>ok(q.result||[]);q.onerror=()=>bad(q.error)})}catch(e){return []}}
+async function deleteScanCache(name){try{const db=await openAnalysisDB(),tx=db.transaction(ANALYSIS_STORE,"readwrite");tx.objectStore(ANALYSIS_STORE).delete(name)}catch(e){}}
+function normSearch(x){
+ return String(x||"").toLocaleUpperCase("tr-TR")
+   .replace(/[^\p{L}\p{N}]+/gu," ").replace(/\s+/g," ").trim();
+}
+function faultConcepts(q){
+ const n=normSearch(q), groups=[];
+ const add=(name,words)=>groups.push({name,words:words.map(normSearch)});
+ if(/JENERAT|GENERATOR|GENSET|GEN SET|DIESEL GENERATOR|DG\b/.test(n))
+   add("Generator",["JENERATÖR","JENERATOR","GENERATOR","GENSET","GEN SET","DIESEL GENERATOR","DIESEL GEN","D G"]);
+ if(/START|MARŞ|MARS|BAŞLA|BASLA|CRANK/.test(n))
+   add("Start",["START","STARTING","STARTER","CRANK","CRANKING","MARŞ","MARS"]);
+ if(/POMPA|PUMP/.test(n)) add("Pump",["POMPA","PUMP"]);
+ if(/YANGIN|FIRE/.test(n)) add("Fire",["YANGIN","FIRE"]);
+ if(/SİNTİNE|SINTINE|BILGE/.test(n)) add("Bilge",["SİNTİNE","SINTINE","BILGE"]);
+ if(/FAN|BLOWER/.test(n)) add("Fan",["FAN","BLOWER"]);
+ if(/KOMPRES|COMPRESS/.test(n)) add("Compressor",["KOMPRESÖR","KOMPRESOR","COMPRESSOR"]);
+ if(/WATERMAKER|SU YAPICI/.test(n)) add("Watermaker",["WATERMAKER","WATER MAKER","SU YAPICI"]);
+ if(/THRUSTER|BAŞ PERVANE|BAS PERVANE/.test(n)) add("Thruster",["THRUSTER","BOW THRUSTER","STERN THRUSTER"]);
+ if(/STEER|DÜMEN|DUMEN/.test(n)) add("Steering",["STEERING","RUDDER","DÜMEN","DUMEN"]);
+ return groups;
+}
+function literalFaultTerms(q){
+ const stop=new Set(["THE","AND","FOR","WITH","NOT","IS","NO","BIR","BİR","VE","ILE","İLE",
+ "CALISMIYOR","ÇALIŞMIYOR","ÇALIŞMIYOR","ALMIYOR","ARIZA","FAULT","FAIL","FAILED","WORK","WORKING",
+ "OTOMATIK","OTOMATİK","START","BAŞLAMIYOR","BASLAMIYOR"]);
+ return normSearch(q).split(/\s+/).filter(x=>x.length>1&&!stop.has(x)&&!/^\d+$/.test(x));
+}
+function scoreFaultText(text,q){
+ const hay=normSearch(text); if(!hay)return {score:0,hits:[]};
+ let score=0,hits=[];
+ const concepts=faultConcepts(q);
+ for(const g of concepts){
+   const found=g.words.find(w=>hay.includes(w));
+   if(found){score+=10;hits.push(g.name)}
+ }
+ for(const t of literalFaultTerms(q)){
+   if(hay.includes(t)){score+=3;hits.push(t)}
+ }
+ // Equipment identity is the strongest signal. For "Generator 1 start..." a page
+ // containing GENERATOR is useful even when START is not printed on that page.
+ if(concepts.length && hits.length) score+=5;
+ return {score,hits:[...new Set(hits)]};
+}
+async function crossFileFaultSearch(q){
+ const scans=await allScanCaches(), hits=[];
+ for(const sc of scans){
+   const matches=[];
+   for(const [key,v] of (sc.equipment||[])){
+     const r=scoreFaultText([key,v.name,v.kind].filter(Boolean).join(" "),q);
+     if(r.score)matches.push({name:v.name||key,kind:v.kind||"",pages:v.pages||[],score:r.score+8,source:"equipment",hits:r.hits});
+   }
+   (sc.pages||[]).forEach((txt,p)=>{
+     if(!txt)return;
+     const r=scoreFaultText(txt,q);
+     if(r.score)matches.push({name:"Şema metni",kind:"TEXT",pages:[p],score:r.score,source:"text",hits:r.hits});
+   });
+   // Current open file may have been opened after an older cache version.
+   if(sc.name===currentFileName && pageTexts && pageTexts.length){
+     pageTexts.forEach((txt,p)=>{
+       if(!txt)return;
+       const r=scoreFaultText(txt,q);
+       if(r.score && !matches.some(m=>m.source==="text"&&m.pages[0]===p))
+         matches.push({name:"Şema metni",kind:"TEXT",pages:[p],score:r.score,source:"text",hits:r.hits});
+     });
+   }
+   if(matches.length){
+     matches.sort((a,b)=>b.score-a.score);
+     const bestByPage=[],seen=new Set();
+     for(const m of matches){
+       const k=(m.pages||[]).join(",")+"|"+m.name;
+       if(!seen.has(k)){seen.add(k);bestByPage.push(m)}
+     }
+     hits.push({file:sc.name,score:bestByPage[0].score,total:bestByPage.reduce((n,x)=>n+x.score,0),matches:bestByPage.slice(0,12)});
+   }
+ }
+ // If the current PDF has not yet been written to the cache, search it too.
+ if(currentFileName && !hits.some(h=>h.file===currentFileName) && pageTexts?.length){
+   const mm=[];
+   pageTexts.forEach((txt,p)=>{
+     if(!txt)return; const r=scoreFaultText(txt,q);
+     if(r.score)mm.push({name:"Şema metni",kind:"TEXT",pages:[p],score:r.score,source:"text",hits:r.hits});
+   });
+   if(mm.length){mm.sort((a,b)=>b.score-a.score);hits.push({file:currentFileName,score:mm[0].score,total:mm.reduce((n,x)=>n+x.score,0),matches:mm.slice(0,12)})}
+ }
+ hits.sort((a,b)=>b.score-a.score||b.total-a.total||a.file.localeCompare(b.file));
+ return hits;
+}
+async function showCrossFileFault(q){
+ const hits=await crossFileFaultSearch(q); if(!hits.length)return false;
+ let body=`<b>Arıza:</b> ${esc(q)}<br><small>${L("allFilesFound")}</small><br>`;
+ hits.forEach((h,i)=>{
+   const lines=h.matches.map(m=>{
+     const pg=m.pages&&m.pages.length?` — ${L("page")} ${m.pages.join(", ")}`:"";
+     const why=m.hits&&m.hits.length?` <small>(${m.hits.map(esc).join(", ")})</small>`:"";
+     return `${esc(m.name)}${pg}${why}`;
+   }).join("<br>");
+   body+=`<div class="cause"><b>${i+1}. ${esc(h.file)}</b><br>${lines}<br>
+   <button class="mini" onclick='openLibFile(${JSON.stringify(h.file)})'>${L("openFile")}</button></div>`;
+ });
+ show(L("allFilesTitle"),body); return true;
+}
+
+async function handle(files,fromLibrary=false){
+ ocrCache={};visibleOcrDone={};visibleOcrBusy={};globalEmap=null;globalQmap=null;schemaScanBusy=false;if($("scanSchema")){ $("scanSchema").disabled=false;$("scanSchema").textContent=(UI_LANG[currentLang]||UI_LANG.en).scan;}if(!files.length)return;let f=files[0];currentFileName=f.name;if(!f.name.toLowerCase().endsWith(".pdf")){toast(L("wrongPdf"));return}if(!PDFJS){let ok=await initPDF();if(!ok){show("Bağlantı Hatası",`<div class="warn">PDF analiz motoruna internet üzerinden ulaşılamadı. Chrome/Edge internet erişimini kontrol et ve tekrar dene.</div>`);return}
+}
+saveMeta(f);if(!fromLibrary)await storeLibraryFile(f);$("drop").style.display="none";$("title").textContent=f.name.replace(/\.pdf$/i,"").replace(/[_-]+/g," ");let cachedScan=await loadScanCache(f.name);$("pages").innerHTML="";$("elements").innerHTML="";$("equipment").innerHTML="";$("elCount").textContent="Analiz hazırlanıyor";$("eqCount").textContent="Analiz hazırlanıyor";if(cachedScan){globalEmap=unpackMap(cachedScan.elements);globalQmap=unpackMap(cachedScan.equipment);renderResults(globalEmap,globalQmap);toast("✓ "+f.name+" — "+L("savedScanLoaded"));}$("bar").style.width="1%";
+try{let data=new Uint8Array(await f.arrayBuffer()),pdf=await PDFJS.getDocument({data}).promise;total=pdf.numPages;$("badge").textContent=`${L("page")} 1/${total}`;let emap=cachedScan?unpackMap(cachedScan.elements):new Map(),qmap=cachedScan?unpackMap(cachedScan.equipment):new Map(); globalEmap=emap;globalQmap=qmap; pageTexts=[]; pageTextItems=[]; pageViewports=[];
+for(let n=1;n<=total;n++){$("status").textContent=L("analyzing",{p:n,t:total});let pg=await pdf.getPage(n),tc=await pg.getTextContent(),text=tc.items.map(x=>x.str).join(" ");pageTexts[n]=text;pageTextItems[n]=tc.items;analyzePage(text,n,emap,qmap);
+let vp=pg.getViewport({scale:1.35});pageViewports[n]=vp;let card=document.createElement("section");card.className="page";card.dataset.page=n;card.innerHTML=`<div class="ph"><span>${L("page")} ${n}</span><span>${n}/${total}</span></div>`;let c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;let wrap=document.createElement("div");wrap.className="canvasWrap";wrap.dataset.page=n;wrap.appendChild(c);let ml=document.createElement("div");ml.className="markLayer";wrap.appendChild(ml);card.appendChild(wrap);$("pages").appendChild(card);await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+$("bar").style.width=(n/total*100)+"%";renderResults(emap,qmap)}
+$("status").textContent=L("done",{t:total,e:emap.size,q:qmap.size});$("bar").style.width="100%";observe();toast(L("analysisDone"));
+}catch(e){$("status").textContent=L("pdfOpenFail");$("pages").innerHTML=`<div class="empty"><b>${L("pdfOpenFail")}.</b><br><br>${esc(String(e.message||e))}</div>`}}
+function observe(){let obs=new IntersectionObserver(es=>{let v=es.filter(x=>x.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];if(v)$("badge").textContent=`${L("page")} ${v.target.dataset.page}/${total}`},{root:$("center"),threshold:[.1,.3,.5]});document.querySelectorAll(".page").forEach(p=>obs.observe(p))}
+$("scanSchema").onclick=scanWholeSchema;$("langSelect").onchange=e=>setLang(e.target.value);let savedLang=localStorage.getItem("analyzer_lang")||"en";$("langSelect").value=savedLang;setLang(savedLang);$("newFile2").onclick=()=>$("picker").click();$("picker").onchange=e=>handle(e.target.files);$("drop").ondragover=e=>{e.preventDefault();$("drop").classList.add("over")};$("drop").ondragleave=()=>$("drop").classList.remove("over");$("drop").ondrop=e=>{e.preventDefault();$("drop").classList.remove("over");handle(e.dataTransfer.files)};
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");$("eq").style.display=t.dataset.tab==="eq"?"block":"none";$("lib").style.display=t.dataset.tab==="lib"?"block":"none"});
+function saveMeta(f){let a=JSON.parse(localStorage.aheLib||"[]").filter(x=>x.name!==f.name);a.unshift({name:f.name,size:f.size,time:Date.now()});localStorage.aheLib=JSON.stringify(a);renderLib()}
+function renderLib(){
+ let a=JSON.parse(localStorage.aheLib||"[]");
+ $("library").innerHTML=a.length?a.map((f,i)=>`<div class="item librow"><button class="mini" style="flex:1;text-align:left;padding:8px;background:#fff;color:#172733" onclick='openLibFile(${JSON.stringify(f.name)})'><b>${i+1}.</b> 📄 ${esc(f.name)}</button><button class="mini" onclick="delLib(${i})">${L("delete")}</button></div>`).join(""):`<div class="count">${L("libraryEmpty")}</div>`
+}
+window.delLib=async i=>{let a=JSON.parse(localStorage.aheLib||"[]");let f=a[i];a.splice(i,1);localStorage.aheLib=JSON.stringify(a);if(f){await deleteLibraryFile(f.name);await deleteScanCache(f.name)}renderLib()};renderLib();
+
+
+function faultTokens(q){
+ const stop=new Set(["çalışmıyor","calismiyor","çalışmiyor","almıyor","almiyor","yok","arıza","ariza","the","is","not","no","does","work","working"]);
+ return q.toLowerCase().replace(/[^\p{L}\p{N}._/-]+/gu," ").split(/\s+/).filter(x=>x.length>2&&!stop.has(x));
+}
+function refsOnPage(p){return currentElements.filter(e=>e.pages.has(p))}
+function equipmentOnPage(p){return currentEquipment.filter(e=>e.pages.has(p))}
+function runFault(q){
+ if(!pageTexts.length){show("Arıza Analizi",`<div class="warn">Önce bir PDF yükleyip analizini tamamla.</div>`);return}
+ let toks=faultTokens(q); if(!toks.length)toks=q.toLowerCase().split(/\s+/).filter(Boolean);
+ let scored=[];
+ for(let p=1;p<=total;p++){
+   let txt=(pageTexts[p]||"").toLowerCase(),score=0,hits=[];
+   toks.forEach(t=>{if(txt.includes(t)){score+=3;hits.push(t)}});
+   // phrase and domain expansion
+   let phrase=q.toLowerCase().replace(/çalışmıyor|calismiyor|çalışmiyor|almıyor|almiyor/g,"").trim();
+   if(phrase && txt.includes(phrase)){score+=8}
+   let expansions=[];
+   if(/damper/i.test(q)) expansions=["damper","fire","actuator","motor","galley","vent","fan"];
+   else if(/generator|jenerat/i.test(q)) expansions=["generator","genset","start","stop","relay","breaker"];
+   else if(/pump|pompa/i.test(q)) expansions=["pump","motor","relay","contactor","breaker"];
+   expansions.forEach(t=>{if(txt.includes(t)){score+=1;hits.push(t)}});
+   if(score>0)scored.push({p,score,hits:[...new Set(hits)]});
+ }
+ scored.sort((a,b)=>b.score-a.score);
+ let top=scored.slice(0,8);
+ if(!top.length){show("Arıza Analizi",`<b>Arıza:</b> ${esc(q)}<br><br><div class="warn">PDF metin katmanında bu arızayla eşleşen ifade bulunamadı. Terimi şemadaki İngilizce ekipman adı veya referansıyla tekrar dene.</div>`);return}
+ let rows=top.map((r,idx)=>{
+   let refs=refsOnPage(r.p).slice(0,10), eqs=equipmentOnPage(r.p).slice(0,3);
+   let checks=[];
+   let fuse=refs.find(x=>/Sigorta|Kesici|Şalter/.test(x.type)); if(fuse)checks.push(`${fuse.ref} ${fuse.type}: besleme/atmış durumunu kontrol et`);
+   let relay=refs.find(x=>/Röle|Kontaktör/.test(x.type)); if(relay)checks.push(`${relay.ref} ${relay.type}: bobin/kontak gerilimini kontrol et`);
+   let motor=refs.find(x=>/Motor/.test(x.type)); if(motor)checks.push(`${motor.ref} Motor: çıkış gerilimi ve bağlantıyı kontrol et`);
+   let term=refs.find(x=>/Terminal/.test(x.type)); if(term)checks.push(`${term.ref} Terminal: bağlantı/süreklilik kontrolü`);
+   if(!checks.length && refs.length)checks.push(`İlgili referanslar: ${refs.slice(0,5).map(x=>x.ref).join(", ")}`);
+   if(!checks.length)checks.push("Bu sayfadaki besleme, kumanda ve çıkış zincirini kontrol et");
+   return `<div class="cause" onclick="jump(${r.p})"><b>${idx+1}. Sayfa ${r.p}</b> — eşleşme: ${r.hits.slice(0,6).map(esc).join(", ")}<br><small>${eqs.map(x=>esc(x.name)).join(" • ")}</small><br>${checks.map(esc).join("<br>")}</div>`;
+ }).join("");
+ show("Arıza Analizi — ",`<b>Arıza:</b> ${esc(q)}<br><small>Şemadaki metin, ekipman ve devre referanslarına göre en ilgili sayfalar:</small>${rows}<div class="warn">Sonuçlar şema metni ve referans eşleşmelerine dayanır. Enerjili elektrik sisteminde işlem yapmadan önce güvenli izolasyon/LOTO prosedürünü uygula.</div>`);
+}
+$("fault").onkeydown=async e=>{if(e.key!=="Enter")return;e.preventDefault();let q=(e.target.value||"").trim()||"Belirtilen arıza";let found=await showCrossFileFault(q);if(found)return;runFault(q)};
+
+let dr=false,dx=0,dy=0;$("mh").onmousedown=e=>{dr=true;dx=e.clientX-$("modal").offsetLeft;dy=e.clientY-$("modal").offsetTop};document.onmousemove=e=>{if(dr){$("modal").style.left=Math.max(0,e.clientX-dx)+"px";$("modal").style.top=Math.max(0,e.clientY-dy)+"px"}};document.onmouseup=()=>dr=false;
+</script>
+<script id="analyzer-mobile-js">
+(function(){
+ function first(sel){return document.querySelector(sel)}
+ function panels(){
+   let L=first('#leftPanel')||first('.leftPanel')||first('aside.left');
+   let R=first('#rightPanel')||first('.rightPanel')||first('aside.right');
+   if(!L||!R){
+     const candidates=[...document.querySelectorAll('aside')];
+     if(!L)L=candidates[0]||null;if(!R)R=candidates[candidates.length-1]||null;
+   }
+   return [L,R];
+ }
+ function closeAll(){
+   let [L,R]=panels(); if(L)L.classList.remove('mobileOpen');if(R)R.classList.remove('mobileOpen');
+   let sh=first('#mobileShade');if(sh)sh.classList.remove('open');
+ }
+ function openPanel(which){
+   let [L,R]=panels(),P=which==='left'?L:R;if(!P)return;
+   closeAll();P.classList.add('mobileOpen');first('#mobileShade').classList.add('open');
+ }
+ document.addEventListener('DOMContentLoaded',function(){
+   first('#mobileLeftBtn').onclick=()=>openPanel('left');
+   first('#mobileRightBtn').onclick=()=>openPanel('right');
+   first('#mobileShade').onclick=closeAll;
+   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
+   // Close drawer after selecting an item, while preserving original click action.
+   document.addEventListener('click',e=>{
+     if(window.innerWidth>760)return;
+     if(e.target.closest('.mobileBar'))return;
+     let [L,R]=panels();
+     if((L&&L.contains(e.target))||(R&&R.contains(e.target))){
+       if(e.target.closest('button,a,[role="button"],li,.item,.element,.equipment'))setTimeout(closeAll,180);
+     }
+   });
+   // simple horizontal swipe: edge→right opens left, edge→left opens right; swipe outward closes
+   let sx=0,sy=0;
+   document.addEventListener('touchstart',e=>{if(e.touches.length===1){sx=e.touches[0].clientX;sy=e.touches[0].clientY}},{passive:true});
+   document.addEventListener('touchend',e=>{
+     if(window.innerWidth>760||!e.changedTouches.length)return;
+     let ex=e.changedTouches[0].clientX,ey=e.changedTouches[0].clientY,dx=ex-sx,dy=ey-sy;
+     if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.4)return;
+     if(sx<28&&dx>0)openPanel('left');
+     else if(sx>window.innerWidth-28&&dx<0)openPanel('right');
+     else {let [L,R]=panels();if((L&&L.classList.contains('mobileOpen')&&dx<0)||(R&&R.classList.contains('mobileOpen')&&dx>0))closeAll()}
+   },{passive:true});
+ });
+})();
+</script>
+
+<script>
+window.addEventListener("DOMContentLoaded",function(){
+ const ls=document.getElementById("langSelect");
+ if(ls && typeof setLang==="function"){
+   let saved=localStorage.getItem("analyzer_lang")||"en";if(saved==="ar")saved="en";
+   ls.value=saved; setLang(saved);
+   ls.onchange=function(){setLang(this.value);};
+ }
+});
+</script>
+
+<script id="authAdminJS">
+(()=>{
+const CENTER="aygungurcan@gmail.com", AKEY="analyzer_accounts_v1", SKEY="analyzer_session_v1", SHKEY="analyzer_shares_v1";
+const $a=id=>document.getElementById(id), now=()=>Date.now();
+const getA=()=>{try{return JSON.parse(localStorage.getItem(AKEY)||"[]")}catch{return[]}};
+const setA=a=>localStorage.setItem(AKEY,JSON.stringify(a));
+const session=()=>{try{return JSON.parse(sessionStorage.getItem(SKEY)||"null")}catch{return null}};
+async function hash(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function validPass(p){return p.length>=8&&/[A-Z]/.test(p)&&/[a-z]/.test(p)&&/\d/.test(p)}
+function enter(mail){
+ let a=getA(),u=a.find(x=>x.mail===mail); if(!u)return;
+ u.loginCount=(u.loginCount||0)+1;u.lastLogin=now();u.online=true;u.lastSeen=now();setA(a);
+ sessionStorage.setItem(SKEY,JSON.stringify({mail,start:now()}));$a("authGate").classList.add("off");
+ if(mail===CENTER){$a("adminBtn").style.display="block";renderAdmin()}
+}
+function logoutStamp(){
+ const ss=session();if(!ss)return;let a=getA(),u=a.find(x=>x.mail===ss.mail);
+ if(u){u.totalMs=(u.totalMs||0)+(now()-ss.start);u.online=false;u.lastSeen=now();setA(a)}
+}
+window.addEventListener("beforeunload",logoutStamp);
+setInterval(()=>{const ss=session();if(!ss)return;let a=getA(),u=a.find(x=>x.mail===ss.mail);if(u){u.lastSeen=now();u.online=true;setA(a)}},30000);
+$a("toLogin").onclick=()=>{$a("regView").style.display="none";$a("loginView").style.display="block"};
+$a("toReg").onclick=()=>{$a("loginView").style.display="none";$a("regView").style.display="block"};
+$a("registerBtn").onclick=async()=>{
+ const mail=$a("regMail").value.trim().toLowerCase(),name=$a("regUser").value.trim(),p1=$a("regPass1").value,p2=$a("regPass2").value,e=$a("regErr");
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){e.textContent="Geçerli bir mail adresi girin.";return}
+ if(name.length<2){e.textContent="Kullanıcı adı girin.";return}
+ if(p1!==p2){e.textContent="Parolalar aynı değil.";return}
+ if(!validPass(p1)){e.textContent="Parola en az 8 karakter, büyük/küçük harf ve rakam içermeli.";return}
+ let a=getA();if(a.some(x=>x.mail===mail)){e.textContent="Bu mail adresi kayıtlı.";return}
+ a.push({mail,name,pass:await hash(p1),created:now(),loginCount:0,totalMs:0,files:0,online:false,lastSeen:0});setA(a);enter(mail)
+};
+$a("loginBtn").onclick=async()=>{
+ const mail=$a("loginMail").value.trim().toLowerCase(),p=$a("loginPass").value,e=$a("loginErr"),a=getA(),u=a.find(x=>x.mail===mail);
+ if(!u||u.pass!==await hash(p)){e.textContent="Mail adresi veya parola hatalı.";return} enter(mail)
+};
+function dur(ms){let m=Math.floor(ms/60000),h=Math.floor(m/60);return h+" sa "+(m%60)+" dk"}
+function online(u){return u.online && now()-(u.lastSeen||0)<90000}
+function fileCount(mail){try{return JSON.parse(localStorage.getItem("analyzer_user_files_"+mail)||"[]").length}catch{return 0}}
+function renderAdmin(){
+ const ss=session();if(!ss||ss.mail!==CENTER)return;
+ const a=getA();$a("adminUsers").innerHTML=a.map((u,i)=>`<div class="userrow"><span class="led ${online(u)?"on":"offl"}"></span><div><div class="uname" data-u="${i}">${esc(u.name)}</div><div class="umail">${esc(u.mail)}</div></div><button class="shareBtn" data-share="${i}">İzin</button></div>`).join("");
+ document.querySelectorAll(".uname").forEach(x=>x.onclick=e=>showUser(a[+x.dataset.u],e));
+ document.querySelectorAll("[data-share]").forEach(x=>x.onclick=()=>shareUI(a[+x.dataset.share]));
+}
+function showUser(u,e){
+ const ss=session(),live=ss&&ss.mail===u.mail?now()-ss.start:0;
+ const p=$a("userPop");p.innerHTML=`<b>${esc(u.name)}</b><br>${esc(u.mail)}<hr>Toplam giriş: <b>${u.loginCount||0}</b><br>Toplam kullanım süresi: <b>${dur((u.totalMs||0)+live)}</b><br>Yüklediği dosya: <b>${fileCount(u.mail)}</b>`;
+ p.style.left=Math.min(e.clientX,innerWidth-290)+"px";p.style.top=Math.min(e.clientY+10,innerHeight-170)+"px";p.style.display="block";
+}
+async function shareUI(u){
+ let files=[];try{files=JSON.parse(localStorage.getItem("analyzer_library_meta")||"[]")}catch{}
+ const p=$a("userPop");p.innerHTML=`<b>${esc(u.name)} için dosya izni</b><div class="filechecks">${files.length?files.map((f,i)=>`<label><input type="checkbox" class="sf" value="${esc(f.name||f)}"> ${esc(f.name||f)}</label><br>`).join(""):"Kayıtlı dosya yok."}</div><select id="shareDur"><option value="3600000">1 saat</option><option value="10800000">3 saat</option><option value="86400000">1 gün</option></select><button class="shareBtn" id="grantShare">İzin ver</button>`;
+ p.style.right="20px";p.style.left="auto";p.style.top="120px";p.style.display="block";
+ $a("grantShare").onclick=()=>{let sh=[];try{sh=JSON.parse(localStorage.getItem(SHKEY)||"[]")}catch{};const sel=[...document.querySelectorAll(".sf:checked")].map(x=>x.value);sh.push({from:CENTER,to:u.mail,files:sel,expires:now()+Number($a("shareDur").value)});localStorage.setItem(SHKEY,JSON.stringify(sh));p.style.display="none"}
+}
+$a("adminBtn").onclick=e=>{e.stopPropagation();const p=$a("adminPanel");p.style.display=p.style.display==="block"?"none":"block";renderAdmin()};
+document.addEventListener("click",e=>{if(!$a("userPop").contains(e.target)&&!e.target.closest(".uname")&&!e.target.closest("[data-share]"))$a("userPop").style.display="none"});
+const ss=session();if(ss){$a("authGate").classList.add("off");if(ss.mail===CENTER){$a("adminBtn").style.display="block";renderAdmin()}}
+})();
+</script>
+<script id="ANALYZER_CLOUD_V4">
+const ANALYZER_SUPABASE={
+ enabled:false,
+ url:"https://YOUR_PROJECT.supabase.co",
+ publishableKey:"YOUR_SUPABASE_PUBLISHABLE_KEY",
+ adminEmail:"aygungurcan@gmail.com",
+ bucket:"schematics"
+};
+let ANALYZER_SB=null;
+function cloudInit(){
+ if(!ANALYZER_SUPABASE.enabled||!window.supabase||ANALYZER_SUPABASE.url.includes("YOUR_PROJECT"))return false;
+ ANALYZER_SB=window.supabase.createClient(ANALYZER_SUPABASE.url,ANALYZER_SUPABASE.publishableKey);
+ return true;
+}
+async function cloudUsernameAvailable(username){
+ const n=String(username||"").trim(); if(n.length<3)return false;
+ if(!ANALYZER_SB){return !getA().some(x=>String(x.name||"").toLocaleLowerCase("tr-TR")===n.toLocaleLowerCase("tr-TR"))}
+ const {data,error}=await ANALYZER_SB.rpc("username_available",{candidate:n});
+ return !error&&data===true;
+}
+async function cloudRegister(email,password,username){
+ if(!ANALYZER_SB)return null;
+ const {data,error}=await ANALYZER_SB.auth.signUp({email,password,options:{data:{username}}});
+ if(error)throw error; return data;
+}
+async function cloudLogin(email,password){
+ if(!ANALYZER_SB)return null;
+ const {data,error}=await ANALYZER_SB.auth.signInWithPassword({email,password});
+ if(error)throw error; return data;
+}
+async function cloudHeartbeat(online=true){
+ if(!ANALYZER_SB)return;
+ const {data:{user}}=await ANALYZER_SB.auth.getUser(); if(!user)return;
+ await ANALYZER_SB.rpc("heartbeat",{is_online:online});
+}
+async function cloudUploadPDF(file){
+ if(!ANALYZER_SB)return null;
+ const {data:{user}}=await ANALYZER_SB.auth.getUser(); if(!user)throw Error("Oturum yok");
+ const id=crypto.randomUUID(),safe=file.name.replace(/[^\p{L}\p{N}._-]+/gu,"_"),path=`${user.id}/${id}/${safe}`;
+ let {error}=await ANALYZER_SB.storage.from(ANALYZER_SUPABASE.bucket).upload(path,file,{upsert:false,contentType:"application/pdf"});
+ if(error)throw error;
+ const {data,error:e2}=await ANALYZER_SB.from("schematics").insert({id,owner_id:user.id,name:file.name,storage_path:path}).select().single();
+ if(e2)throw e2;return data;
+}
+async function cloudSaveScan(fileId,emap,qmap){
+ if(!ANALYZER_SB||!fileId)return;
+ const payload={elements:packMap(emap),equipment:packMap(qmap),pages:(pageTexts||[]).map(x=>String(x||""))};
+ const {error}=await ANALYZER_SB.from("schematic_scans").upsert({file_id:fileId,scan_data:payload,updated_at:new Date().toISOString()},{onConflict:"file_id"});
+ if(error)throw error;
+}
+async function cloudDeleteFile(fileId,path){
+ if(!ANALYZER_SB)return;
+ await ANALYZER_SB.from("schematics").delete().eq("id",fileId);
+ if(path)await ANALYZER_SB.storage.from(ANALYZER_SUPABASE.bucket).remove([path]);
+}
+async function cloudShare(fileIds,recipientId,durationMs){
+ if(!ANALYZER_SB)return;
+ const {data:{user}}=await ANALYZER_SB.auth.getUser(); if(!user)return;
+ const expires=new Date(Date.now()+durationMs).toISOString();
+ const rows=fileIds.map(file_id=>({file_id,owner_id:user.id,recipient_id:recipientId,expires_at:expires}));
+ const {error}=await ANALYZER_SB.from("file_shares").insert(rows);if(error)throw error;
+}
+async function cloudShareCandidates(){
+ if(!ANALYZER_SB)return getA().map((u,i)=>({id:String(i),username:u.name,email:u.mail}));
+ const {data,error}=await ANALYZER_SB.from("profiles").select("id,username,email").neq("id",(await ANALYZER_SB.auth.getUser()).data.user?.id||"");
+ return error?[]:data;
+}
+
+/* Equipment names: canonical, short, unique. */
+function canonicalEquipment(raw){
+ let x=cleanEquipmentName(raw).toLocaleUpperCase("en-US").replace(/\s+/g," ").trim();
+ const rules=[
+  [/FIRE.*PANEL|FIRE ALARM.*PANEL/,"FIRE PANEL"],
+  [/AIR\s*COND|A[İI]R\s*COND|A\/C|HVAC/,"AIR CONDITION SYSTEM"],
+  [/BILGE.*PUMP/,"BILGE PUMP"],
+  [/(GENERATOR|GENSET|JENERAT[ÖO]R)\s*[-:]?\s*1\b/,"GENERATOR 1"],
+  [/(GENERATOR|GENSET|JENERAT[ÖO]R)\s*[-:]?\s*2\b/,"GENERATOR 2"],
+  [/(GENERATOR|GENSET|JENERAT[ÖO]R)/,"GENERATOR"],
+  [/FIRE.*PUMP/,"FIRE PUMP"],[/FRESH.*WATER.*PUMP/,"FRESH WATER PUMP"],
+  [/SEA.*WATER.*PUMP/,"SEA WATER PUMP"],[/STEERING/,"STEERING SYSTEM"],
+  [/BOW.*THRUSTER/,"BOW THRUSTER"],[/WATER\s*MAKER|WATERMAKER/,"WATERMAKER"],
+  [/BATTERY.*CHARG/,"BATTERY CHARGER"],[/SHORE.*POWER/,"SHORE POWER"]
+ ];
+ for(const [r,n] of rules)if(r.test(x))return n;
+ x=x.replace(/\b(SCHEMATIC|DIAGRAM|DRAWING|SHEET|PAGE|REVISION|REV)\b.*$/,"").trim();
+ return x.split(/\s+/).slice(0,6).join(" ");
+}
+function uniqueEquipmentMap(map){
+ const out=new Map();
+ for(const [k,v] of map){
+  const name=canonicalEquipment(v.name||k),key=normSearch(name);
+  if(!name||name.length<3)continue;
+  if(!out.has(key))out.set(key,{...v,name,pages:new Set(v.pages||[])});
+  else{const z=out.get(key);for(const p of(v.pages||[]))z.pages.add(p)}
+ } return out;
+}
+function canonicalCircuitRef(x){return normalizeRef(x).toUpperCase().replace(/\s+/g,"").replace(/_/g,"-")}
+function uniqueCircuitMap(map){
+ const out=new Map();
+ for(const [k,v] of map){
+  const key=canonicalCircuitRef(k);if(!validRef(key))continue;
+  if(!out.has(key))out.set(key,{...v,name:key,pages:new Set(v.pages||[])});
+  else{const z=out.get(key);for(const p of(v.pages||[]))z.pages.add(p)}
+ }return out;
+}
+
+/* Cross-page origin/destination hints based on all occurrences. */
+function circuitRoute(ref){
+ const r=normSearch(canonicalCircuitRef(ref)),pages=[];
+ (pageTexts||[]).forEach((t,i)=>{if(normSearch(t).includes(r))pages.push(i+1)});
+ return [...new Set(pages)].sort((a,b)=>a-b);
+}
+function routeText(ref,current){
+ const ps=circuitRoute(ref),before=ps.filter(x=>x<current),after=ps.filter(x=>x>current);
+ return `<div class="eqRouteBox"><b>${esc(canonicalCircuitRef(ref))}</b><br>Geldiği sayfa: <b>${before.length?before.join(", "):"—"}</b><br>Bulunduğu sayfa: <b>${current||ps[0]||"—"}</b><br>Gittiği sayfa: <b>${after.length?after.join(", "):"—"}</b></div>`;
+}
+
+/* Persistent rectangular highlight until second click. */
+let activeRefMark=null,activeRefKey="";
+function clearRefMark(){if(activeRefMark)activeRefMark.remove();activeRefMark=null;activeRefKey=""}
+function focusCircuitRef(ref,page){
+ const key=canonicalCircuitRef(ref);
+ if(activeRefKey===key){clearRefMark();return}
+ clearRefMark();const p=Number(page||circuitRoute(key)[0]||1);
+ const canvas=document.querySelector(`canvas[data-page="${p}"]`)||document.querySelector(`[data-page="${p}"] canvas`);
+ const holder=canvas?.parentElement;if(!canvas||!holder){if(typeof highlightRef==="function")highlightRef(key,p);return}
+ const items=(window.pageTextItems&&pageTextItems[p-1])||[];
+ const vp=(window.pageViewports&&pageViewports[p-1])||null;
+ const it=items.find(z=>canonicalCircuitRef(z.str)===key)||items.find(z=>normSearch(z.str).includes(normSearch(key)));
+ if(!it||!vp){holder.scrollIntoView({behavior:"smooth",block:"center"});return}
+ const tx=pdfjsLib.Util.transform(vp.transform,it.transform),mark=document.createElement("div");
+ mark.className="analyzerRefFocus strong";holder.style.position="relative";
+ mark.style.left=Math.max(0,tx[4]-5)+"px";mark.style.top=Math.max(0,tx[5]-Math.abs(tx[3])-6)+"px";
+ mark.style.width=Math.max(26,(it.width||20)*vp.scale+10)+"px";mark.style.height=Math.max(18,Math.abs(tx[3])+10)+"px";
+ holder.appendChild(mark);activeRefMark=mark;activeRefKey=key;holder.scrollIntoView({behavior:"smooth",block:"center"});
+ setTimeout(()=>{if(mark===activeRefMark)mark.classList.remove("strong")},1200);
+}
+
+/* Fault diagnosis ordered simple -> complex. */
+function techForRef(ref){
+ const r=canonicalCircuitRef(ref),p=(r.match(/^[A-Z]+/)||[""])[0];
+ const m={
+ F:["Sigorta",1,"Ölç","Enerjiyi kes. Avometreyi buzzer/süreklilik konumuna al; iki uçta süreklilik ara. Açık devre ise sigortayı ve atma nedenini kontrol et; uygun değerle değiştir."],
+ FU:["Sigorta",1,"Ölç","Enerjiyi kes. Buzzer/süreklilik ile iki ucu kontrol et. Süreklilik yoksa önce kısa devre/aşırı akım nedenini bul, sonra aynı tip/değerde sigorta ile değiştir."],
+ QF:["Devre kesici",2,"Ölç","Mekanik ON/OFF durumunu ve enerji kesikken giriş-çıkış sürekliliğini kontrol et. Arızalıysa aynı elektriksel özellikte elemanla değiştir."],
+ X:["Terminal",2,"Kontrol et","Gevşeklik, oksit ve kopukluk kontrolü yap; enerji kesikken uçtan uca süreklilik ölç."],
+ S:["Anahtar / sensör",3,"Ölç","Besleme ve çıkış sinyalini kontrol et. NO/NC kontağı konuma göre süreklilik ile doğrula."],
+ KA:["Röle",4,"Ölç","Bobin direnci/beslemesini kontrol et. NO normalde açık, NC normalde kapalıdır; bobin enerjilenince durum tersine dönmelidir."],
+ KM:["Kontaktör",5,"Ölç","A1-A2 bobin kumanda gerilimini kontrol et. NO kontak çekince kapanmalı, NC kontak çekince açılmalı. Kontaklarda yanma/yüksek direnç varsa değişim değerlendir."],
+ KT:["Zaman rölesi",6,"Ölç","Besleme, ayar süresi ve gecikmeli NO/NC kontak değişimini kontrol et."],
+ M:["Motor",8,"Ölç","Besleme fazlarını, koruma elemanını ve sargı sürekliliğini kontrol et. İzolasyon ölçümü yalnız uygun cihaz/prosedürle yapılmalı."],
+ PLC:["PLC",9,"Teşhis et","Önce besleme ve I/O sinyallerini doğrula; giriş/çıkış LED ve sinyal durumlarını şemayla karşılaştır. Modül değişimini en son değerlendir."]
+ };
+ return m[p]||["Devre elemanı",7,"Ölç","Önce besleme, giriş/çıkış ve süreklilik değerlerini şemaya göre kontrol et; değişimi ölçümden sonra değerlendir."];
+}
+function faultGuide(refs){
+ const a=[...new Set(refs.map(canonicalCircuitRef))].map(r=>({r,t:techForRef(r)})).sort((x,y)=>x.t[1]-y.t[1]).slice(0,15);
+ return a.map((x,i)=>`<div class="faultStep"><b>${i+1}. ${esc(x.r)} — ${esc(x.t[0])}</b> <small>${esc(x.t[2])}</small><br>${esc(x.t[3])}</div>`).join("");
+}
+function showFaultGuide(refs){
+ if(!refs.length)return;$("faultTechBody").innerHTML=faultGuide(refs);$("faultTechModal").style.display="block";
+}
+$("faultTechClose").onclick=()=>$("faultTechModal").style.display="none";
+(()=>{
+ const b=$("faultTechModal"),h=$("faultTechHead");let d=false,dx=0,dy=0;
+ h.addEventListener("pointerdown",e=>{if(e.target.id==="faultTechClose")return;d=true;dx=e.clientX-b.offsetLeft;dy=e.clientY-b.offsetTop;h.setPointerCapture(e.pointerId)});
+ h.addEventListener("pointermove",e=>{if(!d)return;b.style.transform="none";b.style.left=Math.max(0,e.clientX-dx)+"px";b.style.top=Math.max(0,e.clientY-dy)+"px"});
+ h.addEventListener("pointerup",()=>d=false);
+})();
+
+/* Preserve original rendering but clean maps first, then attach second-click persistent focus. */
+const ANALYZER_renderResults=renderResults;
+renderResults=function(emap,qmap){
+ emap=uniqueCircuitMap(emap);qmap=uniqueEquipmentMap(qmap);globalEmap=emap;globalQmap=qmap;
+ ANALYZER_renderResults(emap,qmap);
+ const root=$("elements")||$("elList");
+ if(root)root.querySelectorAll(".item").forEach(row=>{
+   const ref=canonicalCircuitRef(row.querySelector("b")?.textContent||row.textContent.trim().split(/\s+/)[0]);
+   if(!validRef(ref))return;
+   const pages=[...(emap.get(ref)?.pages||[])].map(x=>Number(x)+((Math.min(...[...(emap.get(ref)?.pages||[])].map(Number),1)===0)?1:0));
+   const p=pages[0]||circuitRoute(ref)[0]||1;
+   if(!row.querySelector(".eqRouteBox"))row.insertAdjacentHTML("beforeend",routeText(ref,p));
+   row.onclick=e=>{e.preventDefault();e.stopPropagation();focusCircuitRef(ref,p)};
+ });
+};
+
+/* Fault Enter: after ranking, present detected refs simple -> complex. */
+document.addEventListener("keydown",e=>{
+ if(e.key!=="Enter"||e.target.id!=="fault")return;
+ const q=e.target.value;
+ setTimeout(()=>{
+   const refs=[],terms=queryTerms(q);
+   for(const [r,v] of(globalEmap||new Map())){
+     const pages=[...(v.pages||[])],txt=pages.map(p=>(pageTexts||[])[Number(p)]||"").join(" ");
+     const score=terms.reduce((n,t)=>n+(normSearch(txt+" "+r+" "+(v.kind||"")).includes(t)?1:0),0);
+     if(score)refs.push(r);
+   }
+   if(refs.length)showFaultGuide(refs);
+ },450);
+},true);
+
+/* Username live check. */
+let nameTimer;
+$("regUser")?.addEventListener("input",()=>{
+ clearTimeout(nameTimer);const el=$("userNameState"),v=$("regUser").value.trim();el.textContent="";
+ if(v.length<3)return;
+ nameTimer=setTimeout(async()=>{const ok=await cloudUsernameAvailable(v);el.className="nameState "+(ok?"nameOK":"nameNO");el.textContent=ok?"Bu isim kullanılabilir.":"Bu isim kullanılamaz.";},250);
+});
+
+/* Generic file share dialog: user + duration + selected owned files. */
+async function openShareDialog(){
+ const users=await cloudShareCandidates(),lib=JSON.parse(localStorage.getItem("aheLib")||"[]");
+ $("shareModalBody").innerHTML=`<div class="shareGrid"><label>Kullanıcı<select id="shareUser">${users.map(u=>`<option value="${esc(u.id)}">${esc(u.username||u.name)} — ${esc(u.email||u.mail)}</option>`).join("")}</select></label>
+ <label>Süre<select id="shareTime"><option value="3600000">1 saat</option><option value="10800000">3 saat</option><option value="86400000">1 gün</option></select></label>
+ <b>Paylaşılacak dosyalar</b>${lib.map((f,i)=>`<label><input type="checkbox" class="shareFile" data-id="${esc(f.cloudId||"")}" value="${i}"> ${esc(f.name)}</label>`).join("")||"<p>Dosya yok.</p>"}
+ <button class="abtn" id="doShare">Dosyaları Paylaş</button></div>`;
+ $("shareModal").style.display="block";
+ $("doShare").onclick=async()=>{const ids=[...document.querySelectorAll(".shareFile:checked")].map(x=>x.dataset.id).filter(Boolean);if(ANALYZER_SB&&ids.length)await cloudShare(ids,$("shareUser").value,Number($("shareTime").value));$("shareModal").style.display="none"};
+}
+window.openShareDialog=openShareDialog;
+cloudInit();
+if(ANALYZER_SB){setInterval(()=>cloudHeartbeat(true),30000);window.addEventListener("beforeunload",()=>cloudHeartbeat(false))}
+</script>
+</body></html>
