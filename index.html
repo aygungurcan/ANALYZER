@@ -1282,4 +1282,258 @@ setInterval(()=>{if($v("adminPanel")?.style.display==="block"){const selected=$v
 })();
 </script>
 
+<style id="analyzerV6CSS">
+/* ANALYZER V6 — precision marking, movable/resizable fault panel, action layout */
+.refMark{
+  border:2px solid #e32626!important;
+  background:rgba(255,255,255,.025)!important;
+  border-radius:50%!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.92),0 0 7px rgba(217,25,25,.42)!important;
+  animation:none!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+}
+.markLayer{pointer-events:none!important}.markLayer .refMark{pointer-events:auto!important}
+
+#faultTechModal{
+  width:min(640px,88vw)!important;height:min(58vh,560px)!important;
+  min-width:250px!important;min-height:145px!important;
+  max-width:96vw!important;max-height:90vh!important;
+  left:22px!important;top:135px!important;transform:none!important;
+  resize:both!important;overflow:auto!important;
+  border:2px solid #7d929c!important;background:#fff!important;
+}
+#faultTechHead{
+  position:sticky!important;top:0!important;z-index:30!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  min-height:43px!important;border-radius:10px 10px 0 0!important;
+  box-shadow:0 1px 0 #ffffff33!important;
+}
+#faultTechClose{float:none!important;flex:0 0 auto;border:0;border-radius:6px;min-width:34px;min-height:32px;background:#fff;color:#17232d;font-size:22px;font-weight:900;cursor:pointer}
+#faultTechBody{padding:10px 12px!important;min-width:0!important}
+#faultTechModal .faultRefRow{padding:9px!important}.faultCheck{font-size:12px!important;line-height:1.38!important}
+
+header{gap:12px!important}
+#headerActionStackV6{width:min(310px,25vw);min-width:245px;display:flex;flex-direction:column;gap:8px;align-self:center}
+#headerActionStackV6 #adminBtn{
+  position:static!important;right:auto!important;top:auto!important;width:100%!important;
+  min-height:41px!important;padding:9px 12px!important;margin:0!important;z-index:auto!important;
+}
+#faultSortBtnV6{
+  width:100%;min-height:43px;border:2px solid #5aaf6f;border-radius:8px;
+  background:#bff1c9;color:#111;font-weight:900;line-height:1.15;padding:8px 10px;cursor:pointer;
+}
+#faultSortBtnV6:hover{background:#a8e9b5}
+.right .panel{padding-top:8px!important}
+#mainShareBtn{margin:-5px 0 13px!important;position:relative!important;z-index:2!important}
+.right .tabs{margin:0 -14px 12px!important;position:relative!important;z-index:1!important}
+
+@media(max-width:950px){
+ #headerActionStackV6{width:225px;min-width:205px}
+ #faultSortBtnV6{font-size:11px;padding:6px}
+ #headerActionStackV6 #adminBtn{font-size:12px;padding:7px}
+}
+@media(max-width:760px){
+ header{height:auto!important;min-height:156px!important;flex-wrap:wrap!important;padding-top:8px!important}
+ .grid{height:calc(100vh - 208px)!important}
+ #headerActionStackV6{width:100%!important;min-width:0!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important}
+ #faultTechModal{left:6px!important;top:58px!important;width:calc(100vw - 12px)!important;height:58vh!important;min-width:220px!important;min-height:130px!important}
+}
+</style>
+<script id="ANALYZER_V6_PATCH">
+(()=>{
+"use strict";
+const $6=id=>document.getElementById(id);
+const esc6=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
+/* 1) Header actions: admin above, fault-sort below, immediately to the right of fault entry. */
+function installHeaderActionsV6(){
+ const header=document.querySelector("header"),faultWrap=header?.querySelector(".fault"),admin=$6("adminBtn");
+ if(!header||!faultWrap)return;
+ let stack=$6("headerActionStackV6");
+ if(!stack){stack=document.createElement("div");stack.id="headerActionStackV6";faultWrap.insertAdjacentElement("afterend",stack)}
+ if(admin&&admin.parentElement!==stack)stack.appendChild(admin);
+ let btn=$6("faultSortBtnV6");
+ if(!btn){btn=document.createElement("button");btn.id="faultSortBtnV6";btn.type="button";btn.textContent="ARIZAYA NEDEN OLAN ELEMANLARI SIRALA";stack.appendChild(btn)}
+ btn.onclick=()=>analyzerFaultV6(($6("fault")?.value||"").trim());
+}
+installHeaderActionsV6();
+
+/* 2) Strict circuit reference filtering. Coordinate/cross-reference strings must not become components. */
+const validRefBaseV6=typeof validRef==="function"?validRef:null;
+function strictRefV6(raw){
+ const z=(typeof canonicalCircuitRef==="function"?canonicalCircuitRef(raw):String(raw||"").toUpperCase().replace(/\s+/g,"")).trim();
+ if(!z||!validRefBaseV6?.(z))return false;
+ // Common drawing coordinates/cross references such as R15.17 are not physical resistors.
+ if(/^[RCDHT]\d{1,4}[.:/]\d{1,4}[A-Z]?$/.test(z))return false;
+ if(/^[RCDHT]\d{1,4}-\d{1,4}[A-Z]?$/.test(z))return false;
+ return true;
+}
+if(validRefBaseV6)validRef=function(r){return strictRefV6(r)};
+
+function compactRefV6(x){return (typeof normalizeRef==="function"?normalizeRef(x):String(x||"").toUpperCase()).replace(/[^A-Z0-9]/g,"")}
+function exactRefsFromTextV6(text){
+ const out=[];try{for(const m of(String(text||"").match(refRe)||[])){const r=typeof normalizeRef==="function"?normalizeRef(m):m;if(strictRefV6(r))out.push(r)}}catch{}
+ return out;
+}
+
+/* 3) Fix the 1-based PDF page mapping used by routing/focus. */
+if(typeof circuitRoute==="function")circuitRoute=function(ref){
+ const key=compactRefV6(ref),pages=[];
+ for(let p=1;p<(pageTexts?.length||0);p++){
+  const refs=exactRefsFromTextV6(pageTexts[p]);
+  if(refs.some(r=>compactRefV6(r)===key))pages.push(p);
+ }
+ return [...new Set(pages)].sort((a,b)=>a-b);
+};
+
+function clearRefMarksV6(){
+ document.querySelectorAll(".refMark,.analyzerRefFocus").forEach(x=>x.remove());
+ activeRefKeyV6="";
+}
+let activeRefKeyV6="";
+function boxFromItemsV6(grp,vp,canvas){
+ const sx=canvas.clientWidth/canvas.width,sy=canvas.clientHeight/canvas.height;
+ const boxes=grp.map(it=>{const tr=PDFJS.Util.transform(vp.transform,it.transform),fs=Math.max(Math.hypot(tr[2],tr[3]),7);const x=tr[4]*sx,base=(canvas.height-tr[5])*sy,w=Math.max((it.width||8)*vp.scale*sx,7),h=Math.max(fs*sy,10);return {l:x,t:base-h*1.05,r:x+w,b:base+h*.22}});
+ return {l:Math.min(...boxes.map(b=>b.l)),t:Math.min(...boxes.map(b=>b.t)),r:Math.max(...boxes.map(b=>b.r)),b:Math.max(...boxes.map(b=>b.b))};
+}
+function chooseBestGroupV6(groups,vp,canvas){
+ let best=null,bestScore=-1e9;
+ for(const grp of groups){
+  const box=boxFromItemsV6(grp,vp,canvas),cx=(box.l+box.r)/2,cy=(box.t+box.b)/2;
+  let score=100-grp.length*2;
+  // Strongly avoid title blocks/page coordinates if another exact occurrence exists.
+  if(cy>canvas.clientHeight*.86)score-=45;if(cx<canvas.clientWidth*.025||cx>canvas.clientWidth*.975)score-=18;
+  const area=Math.max(1,(box.r-box.l)*(box.b-box.t));if(area>30000)score-=20;
+  if(score>bestScore){bestScore=score;best={grp,box}}
+ }
+ return best;
+}
+function drawCircleV6(card,canvas,layer,box,ref,p){
+ clearRefMarksV6();
+ const w=Math.max(32,Math.min(95,(box.r-box.l)+22)),h=Math.max(27,Math.min(72,(box.b-box.t)+20));
+ const cx=(box.l+box.r)/2,cy=(box.t+box.b)/2,m=document.createElement("div");m.className="refMark";m.title="Çift tıklayınca işaret kaldırılır";
+ m.style.left=Math.max(0,cx-w/2)+"px";m.style.top=Math.max(0,cy-h/2)+"px";m.style.width=Math.min(w,canvas.clientWidth-Math.max(0,cx-w/2))+"px";m.style.height=h+"px";
+ m.addEventListener("dblclick",e=>{e.preventDefault();e.stopPropagation();m.remove();activeRefKeyV6=""});layer.appendChild(m);activeRefKeyV6=compactRefV6(ref);
+ setTimeout(()=>m.scrollIntoView({behavior:"smooth",block:"center",inline:"center"}),90);if($6("badge"))$6("badge").textContent=`SAYFA ${p}/${total}`;
+ if(typeof toast==="function")toast(`${ref} işaretlendi — Sayfa ${p}. Daireyi kaldırmak için çift tıklayın.`);
+}
+
+/* Exact-only mark placement. No substring/fuzzy circle is drawn on unrelated text. */
+highlightRef=async function(ref,p){
+ p=Number(p)||1;const key=compactRefV6(ref);if(!strictRefV6(ref)){if(typeof toast==="function")toast(`${ref} fiziksel devre elemanı olarak doğrulanmadı; işaret çizilmedi.`);return}
+ const card=document.querySelector(`.page[data-page="${p}"]`);if(!card)return;card.scrollIntoView({behavior:"smooth",block:"center"});
+ const items=pageTextItems?.[p]||[],vp=pageViewports?.[p],canvas=card.querySelector("canvas"),layer=card.querySelector(".markLayer");if(!vp||!canvas||!layer)return;
+ const groups=[];
+ items.forEach(it=>{if(compactRefV6(it.str)===key)groups.push([it])});
+ // Exact fragmented reference only; fragments must be close in the same text line.
+ for(let i=0;i<items.length;i++){
+  let joined="",grp=[],last=null;
+  for(let j=i;j<Math.min(items.length,i+6);j++){
+   const it=items[j],z=compactRefV6(it.str);if(!z)continue;
+   const tr=PDFJS.Util.transform(vp.transform,it.transform);
+   if(last&&Math.abs(tr[5]-last.y)>18)break;
+   grp.push(it);joined+=z;last={y:tr[5]};
+   if(joined===key){groups.push([...grp]);break}if(joined.length>key.length)break;
+  }
+ }
+ if(groups.length){const best=chooseBestGroupV6(groups,vp,canvas);if(best){drawCircleV6(card,canvas,layer,best.box,ref,p);return}}
+ if(typeof toast==="function")toast(`${ref} metin katmanında kesin konumda bulunamadı. Yüksek çözünürlüklü OCR doğrulaması yapılıyor…`);
+ await ocrHighlight(ref,p,canvas,layer);
+};
+focusCircuitRef=function(ref,page){
+ const key=compactRefV6(ref),p=Number(page)||circuitRoute(ref)?.[0]||1;
+ if(activeRefKeyV6===key&&document.querySelector(".refMark")){clearRefMarksV6();return}
+ highlightRef(ref,p);
+};
+
+/* 4) Capture the active PDF document, then render OCR from original vectors at high resolution. */
+function patchPdfCaptureV6(){
+ try{
+  if(typeof PDFJS==="undefined"||!PDFJS?.getDocument||PDFJS.__analyzerV6Wrapped)return !!PDFJS?.__analyzerV6Wrapped;
+  const orig=PDFJS.getDocument.bind(PDFJS);PDFJS.getDocument=function(src){const task=orig(src);Promise.resolve(task.promise).then(pdf=>{window.__ANALYZER_PDF_V6=pdf}).catch(()=>{});return task};PDFJS.__analyzerV6Wrapped=true;return true;
+ }catch{return false}
+}
+let pdfPatchTryV6=0;const pdfPatchTimerV6=setInterval(()=>{pdfPatchTryV6++;if(patchPdfCaptureV6()||pdfPatchTryV6>100)clearInterval(pdfPatchTimerV6)},100);
+const OCR_CACHE_V6={};
+async function hiResPageV6(page,fallback){
+ const maxPixels=24000000,desired=4.2;let hi=document.createElement("canvas"),scaleToScreen=1;
+ const doc=window.__ANALYZER_PDF_V6;
+ if(doc){const pg=await doc.getPage(page),base=pg.getViewport({scale:1});let sc=Math.min(desired,Math.sqrt(maxPixels/(base.width*base.height)));sc=Math.max(2.2,sc);const vp=pg.getViewport({scale:sc});hi.width=Math.round(vp.width);hi.height=Math.round(vp.height);const cx=hi.getContext("2d",{willReadFrequently:true});cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality="high";await pg.render({canvasContext:cx,viewport:vp}).promise;scaleToScreen=fallback?fallback.clientWidth/hi.width:1;return {hi,scaleToScreen}}
+ const pixels=Math.max(1,fallback.width*fallback.height),sc=Math.max(2,Math.min(4,Math.sqrt(maxPixels/pixels)));hi.width=Math.round(fallback.width*sc);hi.height=Math.round(fallback.height*sc);const cx=hi.getContext("2d",{willReadFrequently:true});cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality="high";cx.drawImage(fallback,0,0,hi.width,hi.height);scaleToScreen=fallback.clientWidth/hi.width;return {hi,scaleToScreen};
+}
+async function ocrPageV6(page,canvas,refLabel=""){
+ if(OCR_CACHE_V6[page])return OCR_CACHE_V6[page];const ok=await initOCR();if(!ok)throw new Error("OCR motoru yok");
+ const {hi,scaleToScreen}=await hiResPageV6(page,canvas);if($6("status"))$6("status").textContent=`YÜKSEK ÇÖZÜNÜRLÜKLÜ OCR — Sayfa ${page}/${total}`;
+ const res=await OCR.recognize(hi,"eng",{logger:m=>{if(m.status==="recognizing text"&&typeof m.progress==="number"&&$6("status"))$6("status").textContent=`YÜKSEK ÇÖZÜNÜRLÜKLÜ OCR — Sayfa ${page}/${total} • %${Math.round(m.progress*100)}`}});
+ const data={text:res.data?.text||"",words:res.data?.words||[],scaleToScreen,hiWidth:hi.width,hiHeight:hi.height};OCR_CACHE_V6[page]=data;hi.width=1;hi.height=1;return data;
+}
+ocrAnalyzeRenderedPage=async function(canvas,page,emap,qmap){
+ try{const d=await ocrPageV6(page,canvas);pageTexts[page]=((pageTexts[page]||"")+" "+d.text).trim();analyzePage(d.text,page,emap,qmap);return true}catch(e){console.warn("V6 OCR",e);return false}
+};
+ocrHighlight=async function(ref,p,canvas,layer){
+ try{
+  const d=await ocrPageV6(p,canvas,ref),target=compactRefV6(ref),words=d.words||[],cands=[];
+  for(let i=0;i<words.length;i++){
+   let joined="",grp=[];
+   for(let j=i;j<Math.min(words.length,i+5);j++){
+    const z=compactRefV6(words[j].text);if(!z)continue;joined+=z;grp.push(words[j]);
+    if(joined===target){cands.push([...grp]);break}if(joined.length>target.length)break;
+   }
+  }
+  if(!cands.length){if($6("status"))$6("status").textContent=`OCR tamamlandı — ${ref} kesin bulunamadı`;if(typeof toast==="function")toast(`${ref}: güvenilir konum bulunamadı; yanlış daire çizilmedi.`);return}
+  const boxes=cands.map(grp=>{const bb=grp.map(w=>w.bbox),l=Math.min(...bb.map(b=>b.x0))*d.scaleToScreen,t=Math.min(...bb.map(b=>b.y0))*d.scaleToScreen,r=Math.max(...bb.map(b=>b.x1))*d.scaleToScreen,b=Math.max(...bb.map(b=>b.y1))*d.scaleToScreen;return {grp,box:{l,t,r,b},score:(t<canvas.clientHeight*.86?20:0)-grp.length}}).sort((a,b)=>b.score-a.score);
+  const card=canvas.closest(".page");drawCircleV6(card,canvas,layer,boxes[0].box,ref,p);if($6("status"))$6("status").textContent=`OCR BULDU — ${ref} • Sayfa ${p}/${total}`;
+ }catch(e){if(typeof toast==="function")toast(`${ref}: OCR konumu doğrulanamadı; yanlış daire çizilmedi.`)}
+};
+
+/* 5) Make page badge use the actual visible page card (fixes page 18 / shown 17 mismatch). */
+let badgeRAF6=0;function updateVisiblePageV6(){badgeRAF6=0;const c=$6("center");if(!c||!total)return;const cr=c.getBoundingClientRect(),y=cr.top+Math.min(cr.height*.34,260);let best=null,dist=Infinity;document.querySelectorAll(".page[data-page]").forEach(pg=>{const r=pg.getBoundingClientRect();let d=r.top<=y&&r.bottom>=y?0:Math.min(Math.abs(r.top-y),Math.abs(r.bottom-y));if(d<dist){dist=d;best=pg}});if(best&&$6("badge"))$6("badge").textContent=`SAYFA ${Number(best.dataset.page)}/${total}`}
+$6("center")?.addEventListener("scroll",()=>{if(!badgeRAF6)badgeRAF6=requestAnimationFrame(updateVisiblePageV6)},{passive:true});
+
+/* 6) Focused fault diagnosis: only the most relevant control-chain components. */
+const FAULT_ALLOWED_V6=new Set(["F","FU","Q","QF","CB","X","B","S","K","KA","KM","KT","PS","T","PLC","M"]);
+const FAULT_ORDER_V6={F:1,FU:1,Q:2,QF:2,CB:2,X:3,B:4,S:4,K:5,KA:5,KM:6,KT:7,PS:7,T:8,PLC:9,M:10,R:11,C:11,D:11,H:11};
+function prefV6(ref){return ((typeof canonicalCircuitRef==="function"?canonicalCircuitRef(ref):String(ref)).match(/^[A-Z]+/)||[""])[0]}
+function optionalFaultTypesV6(q){const n=normSearch(q),s=new Set(FAULT_ALLOWED_V6);if(/DIRENC|DİRENÇ|RESIST/.test(n))s.add("R");if(/KONDANS|CAPAC/.test(n))s.add("C");if(/DIYOT|DİYOT|DIODE/.test(n))s.add("D");if(/LAMBA|LAMP|INDICATOR/.test(n))s.add("H");return s}
+function focusedFaultModelV6(q){
+ const eq=[];for(const e of(currentEquipment||[])){const s=scoreFaultText(`${e.name||""} ${e.kind||""}`,q);if(s.score)eq.push({e,score:s.score})}eq.sort((a,b)=>b.score-a.score);
+ const pageScore=[];for(let p=1;p<=total;p++){const s=scoreFaultText(pageTexts?.[p]||"",q);if(s.score)pageScore.push({p,score:s.score})}pageScore.sort((a,b)=>b.score-a.score);
+ let pages=[];
+ if(eq.length){pages=[...new Set(eq.slice(0,2).flatMap(x=>[...(x.e.pages||[])].map(Number)))].filter(p=>p>=1&&p<=total)}
+ if(!pages.length)pages=pageScore.slice(0,3).map(x=>x.p);
+ // If equipment gives too many sheets, keep the sheets that also score for the written fault.
+ if(pages.length>4){const sm=new Map(pageScore.map(x=>[x.p,x.score]));pages=pages.sort((a,b)=>(sm.get(b)||0)-(sm.get(a)||0)).slice(0,4)}
+ const allowed=optionalFaultTypesV6(q),sm=new Map(pageScore.map(x=>[x.p,x.score])),rows=[];
+ for(const e of(currentElements||[])){
+  const ref=e.ref||e.name||"",prefix=prefV6(ref);if(!strictRefV6(ref)||!allowed.has(prefix))continue;
+  const hit=[...(e.pages||[])].map(Number).filter(p=>pages.includes(p));if(!hit.length)continue;
+  const rel=Math.max(...hit.map(p=>sm.get(p)||1));rows.push({ref,type:e.type||refType(ref),pages:hit,score:rel+(12-(FAULT_ORDER_V6[prefix]||10)),order:FAULT_ORDER_V6[prefix]||10})
+ }
+ rows.sort((a,b)=>a.order-b.order||b.score-a.score||a.ref.localeCompare(b.ref,undefined,{numeric:true}));
+ // Avoid dozens of contacts/references from one sheet; keep a concise diagnostic chain.
+ const uniq=[],seen=new Set();for(const r of rows){const k=compactRefV6(r.ref);if(seen.has(k))continue;seen.add(k);uniq.push(r);if(uniq.length>=10)break}
+ return {pages,eq:eq.slice(0,3),refs:uniq};
+}
+function faultRowHtmlV6(x,i){const t=window.techForRef?window.techForRef(x.ref):[x.type,7,"Besleme, giriş/çıkış ve süreklilik değerlerini şemaya göre kontrol edin."];const info=t[2]||t[3]||"Şema üzerindeki besleme ve kontak durumunu ölçerek doğrulayın.";return `<div class="faultRefRow" data-v6-ref="${esc6(x.ref)}" data-v6-page="${Number(x.pages[0]||1)}"><b>${i+1}. ${esc6(x.ref)} — ${esc6(x.type||t[0])}</b><small>Sayfa: ${x.pages.join(", ")}</small><div class="faultCheck">${esc6(info)}</div></div>`}
+async function analyzerFaultV6(q){
+ const modal=$6("faultTechModal"),body=$6("faultTechBody");if(!modal||!body)return;q=(q||"").trim();if(!q){body.innerHTML=`<div class="warn">Önce arızayı yazın.</div>`;modal.style.display="block";return}if(!pageTexts?.length||!currentFileName){body.innerHTML=`<div class="warn">Önce bir PDF açıp analizini tamamlayın.</div>`;modal.style.display="block";return}
+ const m=focusedFaultModelV6(q),eqNames=m.eq.map(x=>x.e.name).filter(Boolean);
+ body.innerHTML=`<div class="faultSummary"><b>Arıza:</b> ${esc6(q)}<br>${eqNames.length?`<b>Eşleşen ekipman:</b> ${eqNames.map(esc6).join(" • ")}<br>`:""}<b>İlgili sayfalar:</b> ${m.pages.join(", ")||"—"}<br><b>${m.refs.length}</b> gerekli kontrol elemanı sıralandı.</div>`+(m.refs.length?m.refs.map(faultRowHtmlV6).join(""):`<div class="warn">Bu arıza için güvenilir fiziksel devre referansı bulunamadı. Gereksiz eleman listelenmedi.</div>`)+`<div class="faultSafety"><b>Güvenlik:</b> Ölçüm ve müdahale öncesinde uygun LOTO/izolasyon prosedürünü uygulayın; gerilimsizliği uygun ölçü aletiyle doğrulayın.</div>`;
+ modal.style.display="block";body.querySelectorAll("[data-v6-ref]").forEach(r=>r.onclick=()=>focusCircuitRef(r.dataset.v6Ref,Number(r.dataset.v6Page)));
+}
+window.analyzerFaultV6=analyzerFaultV6;
+// Retire older broad popup routine and use the focused model for Enter and the new button.
+try{showFaultGuide=function(){}}catch{}
+if($6("fault"))$6("fault").onkeydown=e=>{if(e.key!=="Enter")return;e.preventDefault();e.stopPropagation();analyzerFaultV6((e.currentTarget.value||"").trim())};
+
+/* 7) Keep the fault panel draggable while its title/close line stays visible during scrolling. */
+const fm=$6("faultTechModal"),fh=$6("faultTechHead");
+if(fm&&fh&&!fh.dataset.v6drag){fh.dataset.v6drag="1";let drag=false,dx=0,dy=0;fh.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;const r=fm.getBoundingClientRect();drag=true;dx=e.clientX-r.left;dy=e.clientY-r.top;fh.setPointerCapture?.(e.pointerId)});fh.addEventListener("pointermove",e=>{if(!drag)return;const maxX=Math.max(0,innerWidth-fm.offsetWidth),maxY=Math.max(0,innerHeight-60);fm.style.left=Math.max(0,Math.min(maxX,e.clientX-dx))+"px";fm.style.top=Math.max(52,Math.min(maxY,e.clientY-dy))+"px"});fh.addEventListener("pointerup",()=>drag=false);fh.addEventListener("pointercancel",()=>drag=false)}
+
+/* Refresh already-rendered maps with stricter V6 filtering. */
+setTimeout(()=>{try{if(globalEmap&&globalQmap)renderResults(globalEmap,globalQmap);updateVisiblePageV6()}catch{}},350);
+})();
+</script>
+
 </body></html>
