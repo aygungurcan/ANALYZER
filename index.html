@@ -98,24 +98,29 @@ header{height:116px;background:#fff;border-bottom:1px solid var(--line);display:
 
 <div id="authGate">
  <div class="authbox">
-  <div class="authbrand"><b>ANALYZER</b><span>Baş Çarkçı Aygün Gürcan</span></div>
-  <div id="regView">
-   <h2>Hesap Oluştur</h2><p>Programı açmadan önce kullanıcı hesabınızı oluşturun.</p>
-   <div class="af"><label>Mail adresi</label><input id="regMail" type="email" autocomplete="email"></div>
-   <div class="af"><label>Kullanıcı adı</label><input id="regUser" autocomplete="username" placeholder="Örn. Aygün Gürcan"><div id="userNameState" class="nameState"></div></div>
-   <div class="af"><label>Parola</label><input id="regPass1" type="password" autocomplete="new-password"></div>
-   <div class="af"><label>Parola tekrar</label><input id="regPass2" type="password" autocomplete="new-password"></div>
-   <div class="aerr" id="regErr"></div><button class="abtn" id="registerBtn">Hesap Oluştur ve Giriş Yap</button>
-   <p style="text-align:center">Hesabınız var mı? <button class="alink" id="toLogin">Giriş yap</button></p>
+  <div class="authChoices" aria-label="Hesap işlemleri">
+   <div class="authChoiceCard"><button type="button" id="authTopLogin" class="authChoiceBtn">Giriş Yap</button><div class="authChoiceHelp">Daha önceden hesap oluşturduysanız buradan giriş yapınız.</div></div>
+   <div class="authChoiceCard"><button type="button" id="authTopRegister" class="authChoiceBtn">Kayıt Ol / Hesap Oluştur</button><div class="authChoiceHelp">Yeni bir kullanıcı hesabı oluşturmak için burayı kullanınız.</div></div>
   </div>
-  <div id="loginView" style="display:none">
-   <h2>Giriş</h2><p>Mail adresiniz ve parolanız ile giriş yapın.</p>
-   <div class="af"><label>Mail adresi</label><input id="loginMail" type="email" autocomplete="email"></div>
-   <div class="af"><label>Parola</label><input id="loginPass" type="password" autocomplete="current-password"></div>
-   <div class="aerr" id="loginErr"></div><button class="abtn" id="loginBtn">Giriş Yap</button>
-   <p style="text-align:center">Yeni kullanıcı mısınız? <button class="alink" id="toReg">Hesap oluştur</button></p>
+  <div class="authIntro">“Elektrik, elektronik sistemlerle çalışan siz değerli teknisyen, tekniker ve mühendislerimiz; çalıştığınız sistemlerin elektrik şemalarını bu program sayesinde saniyeler içinde analiz edebilir, arızayı yazarak ilgili devre elemanlarını görebilir. Ayrıca sistemdeki kullanıcılar ile sınırlı süreli dosya paylaşımı yapabilirsiniz. Değerli meslektaşlarıma kolaylıklar dilerim.”</div>
+  <div class="authbrand" translate="no"><b>ANALYZER</b><span>Baş Çarkçı Aygün Gürcan</span></div>
+  <div id="loginView" class="authFormPane" style="display:none">
+   <h2>Giriş Yap | Sign In</h2><p>Kullanıcı adınız ve parolanız ile giriş yapın. | Sign in with your username and password.</p>
+   <div class="af"><label>Kullanıcı adı | Username</label><input id="loginMail" type="text" autocomplete="username" placeholder="Kullanıcı adı / Username"></div>
+   <div class="af"><label>Parola | Password</label><input id="loginPass" type="password" autocomplete="current-password"></div>
+   <div class="aerr" id="loginErr"></div><button class="abtn" id="loginBtn">Giriş Yap | Sign In</button>
+   <p style="text-align:center">Yeni kullanıcı mısınız? | New user? <button class="alink" id="toReg">Kayıt Ol / Hesap Oluştur</button></p>
   </div>
-  <p style="text-align:center;font-size:11px">Merkez yönetici hesabı: aygungurcan@gmail.com</p>
+  <div id="regView" class="authFormPane" style="display:none">
+   <h2>Hesap Oluştur | Create Account</h2><p>Programı açmadan önce kullanıcı hesabınızı oluşturun. | Create your user account before opening the program.</p>
+   <div class="af"><label>E-posta adresi | Email address</label><input id="regMail" type="email" autocomplete="email"></div>
+   <div class="af"><label>Kullanıcı adı | Username</label><input id="regUser" autocomplete="username" placeholder="Örn. Aygün Gürcan / E.g. Aygün Gürcan"><div id="userNameState" class="nameState"></div></div>
+   <div class="af"><label>Parola | Password</label><input id="regPass1" type="password" autocomplete="new-password"></div>
+   <div class="af"><label>Parola tekrar | Repeat password</label><input id="regPass2" type="password" autocomplete="new-password"></div>
+   <div class="aerr" id="regErr"></div><button class="abtn" id="registerBtn">Hesap Oluştur ve Giriş Yap | Create Account & Sign In</button>
+   <p style="text-align:center">Hesabınız var mı? | Already have an account? <button class="alink" id="toLogin">Giriş Yap</button></p>
+  </div>
+  <p class="adminAccountNote">Merkez yönetici hesabı | Main administrator account: aygungurcan@gmail.com</p>
  </div>
 </div>
 <button id="adminBtn">Yönetici Paneli</button>
@@ -831,8 +836,10 @@ $a("registerBtn").onclick=async()=>{
  a.push({mail,name,pass:await hash(p1),created:now(),loginCount:0,totalMs:0,files:0,online:false,lastSeen:0});setA(a);enter(mail)
 };
 $a("loginBtn").onclick=async()=>{
- const mail=$a("loginMail").value.trim().toLowerCase(),p=$a("loginPass").value,e=$a("loginErr"),a=getA(),u=a.find(x=>x.mail===mail);
- if(!u||u.pass!==await hash(p)){e.textContent="Mail adresi veya parola hatalı.";return} enter(mail)
+ const identity=$a("loginMail").value.trim(),p=$a("loginPass").value,e=$a("loginErr"),a=getA();
+ const low=identity.toLocaleLowerCase("tr-TR");
+ const u=a.find(x=>String(x.mail||"").toLocaleLowerCase("tr-TR")===low||String(x.name||"").toLocaleLowerCase("tr-TR")===low);
+ if(!u||u.pass!==await hash(p)){e.textContent="Kullanıcı adı/e-posta veya parola hatalı. | Username/email or password is incorrect.";return} enter(u.mail)
 };
 function dur(ms){let m=Math.floor(ms/60000),h=Math.floor(m/60);return h+" sa "+(m%60)+" dk"}
 function online(u){return u.online && now()-(u.lastSeen||0)<90000}
@@ -1169,14 +1176,18 @@ function renderAdminV5(){
  const ss=sessionV();if(!ss||ss.mail!==CENTER_V5)return;ensureLegacyOwnersV();
  const p=$v("adminPanel"),root=$v("adminUsers");if(!p||!root)return;
  let detail=$v("adminDetail");if(!detail){detail=document.createElement("div");detail.id="adminDetail";detail.innerHTML="Bir kullanıcının ayrıntılarını görmek için adına dokunun.";p.appendChild(detail)}
- const a=accountsV();root.innerHTML=a.map((u,i)=>`<div class="userrow" data-admin-user="${i}"><span class="led ${onlineAdminV(u)?"on":"offl"}"></span><div><div class="uname">${escV(u.name)}</div><div class="umail">${escV(u.mail)}</div></div></div>`).join("")||"<div class='count'>Kayıtlı kullanıcı yok.</div>";
+ const a=accountsV();root.innerHTML=a.map((u,i)=>{const on=onlineAdminV(u);return `<div class="userrow" data-admin-user="${i}"><div class="presenceWrapV8"><span class="led ${on?"on":"offl"}"></span><span class="presenceTextV8" data-presence="${on?"online":"offline"}">${on?"ONLINE":"OFFLINE"}</span></div><div><div class="uname">${escV(u.name)}</div><div class="umail">${escV(u.mail)}</div></div></div>`}).join("")||"<div class='count'>Kayıtlı kullanıcı yok.</div>";
  root.querySelectorAll("[data-admin-user]").forEach(row=>row.onclick=()=>showAdminUserV(a[Number(row.dataset.adminUser)]));
+ setTimeout(()=>window.applyV8Language?.(window.__ANALYZER_LANG_V8||localStorage.getItem("analyzer_lang")||"tr"),0);
 }
 function showAdminUserV(u){
  const ss=sessionV(),live=ss&&ss.mail===u.mail?nowV()-ss.start:0,sh=shareSummaryForV(u.mail),detail=$v("adminDetail");if(!detail)return;
- detail.innerHTML=`<b style="font-size:18px">${escV(u.name)}</b><br>${escV(u.mail)}<hr>Toplam giriş: <b>${u.loginCount||0}</b><br>Toplam kullanım süresi: <b>${durAdminV((u.totalMs||0)+live)}</b><br>Yüklediği dosya: <b>${fileCountV(u.mail)}</b><br>Aktif paylaştığı dosya: <b>${sh.count}</b>${sh.lines.length?`<div class="adminShareLine"><b>Paylaştığı kullanıcılar</b><br>${sh.lines.map(escV).join("<br>")}</div>`:"<div class='adminShareLine'>Aktif dosya paylaşımı yok.</div>"}`;
+ detail.style.display="block";detail.innerHTML=`<button class="popupCloseV8 adminDetailCloseV8" type="button" aria-label="Kapat">×</button><b style="font-size:18px">${escV(u.name)}</b><br>${escV(u.mail)}<hr><span data-v8-label="loginCount">Toplam giriş</span>: <b>${u.loginCount||0}</b><br><span data-v8-label="usageTime">Toplam kullanım süresi</span>: <b>${durAdminV((u.totalMs||0)+live)}</b><br><span data-v8-label="uploadedFiles">Yüklediği dosya</span>: <b>${fileCountV(u.mail)}</b><br><span data-v8-label="activeShared">Aktif paylaştığı dosya</span>: <b>${sh.count}</b>${sh.lines.length?`<div class="adminShareLine"><b data-v8-label="sharedUsers">Paylaştığı kullanıcılar</b><br>${sh.lines.map(escV).join("<br>")}</div>`:"<div class='adminShareLine' data-v8-label='noActiveShare'>Aktif dosya paylaşımı yok.</div>"}`;
+ detail.querySelector(".adminDetailCloseV8").onclick=e=>{e.stopPropagation();detail.style.display="none"};
+ setTimeout(()=>window.applyV8Language?.(window.__ANALYZER_LANG_V8||localStorage.getItem("analyzer_lang")||"tr"),0);
 }
 const adminBtnV=$v("adminBtn");if(adminBtnV)adminBtnV.onclick=e=>{e.stopPropagation();const p=$v("adminPanel");p.style.display=p.style.display==="block"?"none":"block";if(p.style.display==="block")renderAdminV5()};
+setInterval(()=>{try{if($v("adminPanel")?.style.display==="block")renderAdminV5()}catch{}},15000);
 
 /* Compact file library with share checkbox and safe delete flow. */
 function currentOwnerFilesV(){const m=currentMailV()||CENTER_V5;return libV().filter(f=>ownerForRowV(f)===m)}
@@ -1638,6 +1649,80 @@ ensureNotificationsV7();ensureFaultGoV7();
 window.addEventListener("storage",e=>{if(e.key===SHARE_KEY_V7){renderNotificationsV7(false);updateNotificationBadgeV7()}});
 setInterval(()=>{updateNotificationBadgeV7();if($7("notificationsModalV7")?.style.display==="block")renderNotificationsV7(false);document.querySelectorAll("[data-notify-exp]").forEach(x=>x.textContent=remain7(Number(x.dataset.notifyExp)-now7()))},1000);
 setTimeout(()=>{try{if(globalEmap&&globalQmap)window.renderResults(globalEmap,globalQmap)}catch{}},500);
+})();
+</script>
+
+
+<style id="ANALYZER_V8_STYLE">
+/* ANALYZER V8 — auth redesign, presence labels, universal popup close, expanded localization */
+#authGate{background:#d96f72!important;align-items:flex-start!important;justify-content:center!important;overflow:auto!important;padding:32px 18px 50px!important}
+#authGate .authbox{width:min(900px,96vw)!important;background:transparent!important;box-shadow:none!important;border-radius:0!important;padding:0!important;color:#fff!important}
+.authChoices{display:grid;grid-template-columns:1fr 1fr;gap:22px;width:min(760px,100%);margin:0 auto 18px}
+.authChoiceCard{text-align:center}.authChoiceBtn{width:100%;min-height:58px;border:2px solid #fff;background:#fff;color:#111;border-radius:9px;font-size:18px;font-weight:900;cursor:pointer;padding:12px 16px;box-shadow:0 7px 18px #0002}.authChoiceBtn.active{outline:4px solid #ffffff55}
+.authChoiceHelp{font-size:12px;line-height:1.4;color:#fff;margin-top:7px;font-weight:700}
+.authIntro{width:min(760px,100%);margin:0 auto 20px;border:2px solid #fff;border-radius:0;padding:16px 18px;color:#fff;background:transparent;font-size:15px;line-height:1.55;font-style:italic;text-align:center;font-weight:600}
+#authGate .authbrand{width:min(520px,100%);margin:0 auto 18px;border:2px solid #fff!important;background:#fff;color:#17232d!important}.authbrand b{font-size:36px!important}
+.authFormPane{width:min(520px,100%);margin:0 auto;background:#fff;color:#17232d;border-radius:14px;padding:22px;box-shadow:0 14px 38px #0003}
+.authFormPane p{color:#66767d!important}.adminAccountNote{text-align:center;font-size:11px;color:#fff!important;margin-top:14px}.authFormPane .abtn{background:#fff;color:#111;border:2px solid #d96f72}.authFormPane .alink{color:#9e3439}.authFormPane .af label{font-size:12px}
+#adminPanel{padding-top:48px!important;overflow:auto!important}#adminPanel .panelTitleV8{position:absolute;left:14px;top:14px;font-weight:900;font-size:17px}.popupCloseV8{position:absolute;right:10px;top:8px;width:32px;height:32px;border:0;border-radius:7px;background:#172d38;color:#fff;font-size:22px;line-height:28px;font-weight:900;cursor:pointer;z-index:5}
+#adminDetail{position:relative!important;padding:14px 48px 14px 14px!important;min-height:54px}.adminDetailCloseV8{right:8px!important;top:8px!important}
+#adminUsers .userrow{grid-template-columns:112px 1fr!important}.presenceWrapV8{display:flex;align-items:center;gap:7px;white-space:nowrap}.presenceTextV8{font-size:11px;font-weight:900}.presenceTextV8[data-presence="online"]{color:#0b8b4d}.presenceTextV8[data-presence="offline"]{color:#c32d34}
+#userPop,#shareModal,#deleteConfirmV5{position:fixed}#userPop{padding-top:48px!important}.v8Closable{position:relative!important;padding-top:48px!important}
+#shareModal>.popupCloseV8,#deleteConfirmV5>.popupCloseV8,#userPop>.popupCloseV8{display:block}
+@media(max-width:650px){.authChoices{grid-template-columns:1fr;gap:12px}.authChoiceHelp{margin-bottom:5px}#authGate{padding-top:20px!important}.authIntro{font-size:13px}.authFormPane{padding:17px}}
+</style>
+<script id="ANALYZER_V8_PATCH">
+(()=>{
+"use strict";
+const $8=id=>document.getElementById(id);
+const LANG8={
+ tr:{admin:"Yönetici Paneli",online:"ÇEVRİMİÇİ",offline:"ÇEVRİMDIŞI",notifications:"🔔 BİLDİRİMLER",shareFiles:"DOSYA PAYLAŞ",faultGo:"ARIZAYA GİT",faultOrder:"Arıza Kontrol Sırası",share:"Paylaş",del:"Sil",newFile:"+ Yeni PDF Yükle",user:"Kullanıcı adı",duration:"Paylaşım süresi",shownFiles:"Gösterilecek dosyalar",allFiles:"Tüm dosyalarımı göster",selectedFiles:"Seçili dosyalarımı göster",showFiles:"DOSYA GÖSTER",activeShares:"Aktif paylaşımlarım",loginCount:"Toplam giriş",usageTime:"Toplam kullanım süresi",uploadedFiles:"Yüklediği dosya",activeShared:"Aktif paylaştığı dosya",sharedUsers:"Paylaştığı kullanıcılar",noActiveShare:"Aktif dosya paylaşımı yok.",close:"Kapat"},
+ en:{admin:"Admin Panel",online:"ONLINE",offline:"OFFLINE",notifications:"🔔 NOTIFICATIONS",shareFiles:"SHARE FILE",faultGo:"GO TO FAULT",faultOrder:"Fault Check Sequence",share:"Share",del:"Delete",newFile:"+ Upload New PDF",user:"Username",duration:"Sharing duration",shownFiles:"Files to display",allFiles:"Show all my files",selectedFiles:"Show selected files",showFiles:"SHOW FILES",activeShares:"My active shares",loginCount:"Total logins",usageTime:"Total usage time",uploadedFiles:"Uploaded files",activeShared:"Active shared files",sharedUsers:"Users shared with",noActiveShare:"No active file sharing.",close:"Close"},
+ de:{admin:"Administrator",online:"ONLINE",offline:"OFFLINE",notifications:"🔔 BENACHRICHTIGUNGEN",shareFiles:"DATEI TEILEN",faultGo:"ZUM FEHLER",faultOrder:"Fehlerprüfreihenfolge",share:"Teilen",del:"Löschen",newFile:"+ Neue PDF hochladen",user:"Benutzername",duration:"Freigabedauer",shownFiles:"Anzuzeigende Dateien",allFiles:"Alle meine Dateien anzeigen",selectedFiles:"Ausgewählte Dateien anzeigen",showFiles:"DATEIEN ANZEIGEN",activeShares:"Aktive Freigaben",loginCount:"Anmeldungen gesamt",usageTime:"Gesamtnutzungszeit",uploadedFiles:"Hochgeladene Dateien",activeShared:"Aktiv geteilte Dateien",sharedUsers:"Geteilt mit",noActiveShare:"Keine aktive Dateifreigabe.",close:"Schließen"},
+ it:{admin:"Pannello Admin",online:"ONLINE",offline:"OFFLINE",notifications:"🔔 NOTIFICHE",shareFiles:"CONDIVIDI FILE",faultGo:"VAI AL GUASTO",faultOrder:"Sequenza controllo guasto",share:"Condividi",del:"Elimina",newFile:"+ Carica nuovo PDF",user:"Nome utente",duration:"Durata condivisione",shownFiles:"File da mostrare",allFiles:"Mostra tutti i miei file",selectedFiles:"Mostra file selezionati",showFiles:"MOSTRA FILE",activeShares:"Condivisioni attive",loginCount:"Accessi totali",usageTime:"Tempo totale di utilizzo",uploadedFiles:"File caricati",activeShared:"File condivisi attivi",sharedUsers:"Condiviso con",noActiveShare:"Nessuna condivisione attiva.",close:"Chiudi"},
+ fr:{admin:"Panneau Admin",online:"EN LIGNE",offline:"HORS LIGNE",notifications:"🔔 NOTIFICATIONS",shareFiles:"PARTAGER FICHIER",faultGo:"ALLER À LA PANNE",faultOrder:"Séquence de contrôle de panne",share:"Partager",del:"Supprimer",newFile:"+ Charger un nouveau PDF",user:"Nom d’utilisateur",duration:"Durée du partage",shownFiles:"Fichiers à afficher",allFiles:"Afficher tous mes fichiers",selectedFiles:"Afficher les fichiers sélectionnés",showFiles:"AFFICHER LES FICHIERS",activeShares:"Partages actifs",loginCount:"Connexions totales",usageTime:"Durée totale d’utilisation",uploadedFiles:"Fichiers chargés",activeShared:"Fichiers partagés actifs",sharedUsers:"Partagé avec",noActiveShare:"Aucun partage actif.",close:"Fermer"},
+ id:{admin:"Panel Admin",online:"ONLINE",offline:"OFFLINE",notifications:"🔔 NOTIFIKASI",shareFiles:"BAGIKAN FILE",faultGo:"KE GANGGUAN",faultOrder:"Urutan pemeriksaan gangguan",share:"Bagikan",del:"Hapus",newFile:"+ Unggah PDF Baru",user:"Nama pengguna",duration:"Durasi berbagi",shownFiles:"File yang ditampilkan",allFiles:"Tampilkan semua file saya",selectedFiles:"Tampilkan file terpilih",showFiles:"TAMPILKAN FILE",activeShares:"Berbagi aktif",loginCount:"Total masuk",usageTime:"Total waktu penggunaan",uploadedFiles:"File diunggah",activeShared:"File dibagikan aktif",sharedUsers:"Dibagikan dengan",noActiveShare:"Tidak ada berbagi file aktif.",close:"Tutup"},
+ th:{admin:"แผงผู้ดูแล",online:"ออนไลน์",offline:"ออฟไลน์",notifications:"🔔 การแจ้งเตือน",shareFiles:"แชร์ไฟล์",faultGo:"ไปที่ข้อขัดข้อง",faultOrder:"ลำดับตรวจสอบข้อขัดข้อง",share:"แชร์",del:"ลบ",newFile:"+ อัปโหลด PDF ใหม่",user:"ชื่อผู้ใช้",duration:"ระยะเวลาแชร์",shownFiles:"ไฟล์ที่จะแสดง",allFiles:"แสดงไฟล์ทั้งหมดของฉัน",selectedFiles:"แสดงไฟล์ที่เลือก",showFiles:"แสดงไฟล์",activeShares:"การแชร์ที่ใช้งานอยู่",loginCount:"จำนวนเข้าสู่ระบบ",usageTime:"เวลาการใช้งานรวม",uploadedFiles:"ไฟล์ที่อัปโหลด",activeShared:"ไฟล์ที่แชร์อยู่",sharedUsers:"แชร์กับ",noActiveShare:"ไม่มีการแชร์ไฟล์ที่ใช้งานอยู่",close:"ปิด"},
+ zh:{admin:"管理员面板",online:"在线",offline:"离线",notifications:"🔔 通知",shareFiles:"共享文件",faultGo:"转到故障",faultOrder:"故障检查顺序",share:"共享",del:"删除",newFile:"+ 上传新 PDF",user:"用户名",duration:"共享时长",shownFiles:"要显示的文件",allFiles:"显示我的全部文件",selectedFiles:"显示所选文件",showFiles:"显示文件",activeShares:"活动共享",loginCount:"登录总数",usageTime:"总使用时间",uploadedFiles:"已上传文件",activeShared:"活动共享文件",sharedUsers:"共享对象",noActiveShare:"没有活动文件共享。",close:"关闭"},
+ ja:{admin:"管理者パネル",online:"オンライン",offline:"オフライン",notifications:"🔔 通知",shareFiles:"ファイル共有",faultGo:"故障へ移動",faultOrder:"故障確認手順",share:"共有",del:"削除",newFile:"+ 新しいPDFをアップロード",user:"ユーザー名",duration:"共有時間",shownFiles:"表示するファイル",allFiles:"すべてのファイルを表示",selectedFiles:"選択したファイルを表示",showFiles:"ファイルを表示",activeShares:"有効な共有",loginCount:"ログイン合計",usageTime:"合計使用時間",uploadedFiles:"アップロード済みファイル",activeShared:"共有中のファイル",sharedUsers:"共有相手",noActiveShare:"有効なファイル共有はありません。",close:"閉じる"}
+};
+function lang8(code){return LANG8[code]||LANG8.en}
+function textOnly(el,txt){if(!el)return;el.textContent=txt}
+function labelWithInput(selector,txt){const el=document.querySelector(selector);if(!el)return;const inp=el.querySelector("input");if(!inp)return;[...el.childNodes].filter(n=>n.nodeType===3).forEach(n=>n.remove());el.append(document.createTextNode(txt))}
+function enforceBrand8(){document.querySelectorAll(".authbrand b,.mobileTitle,#brandFrame .brand").forEach(el=>{el.textContent="ANALYZER";el.setAttribute("translate","no")});document.title="ANALYZER"}
+function ensurePopupClose8(){
+ const items=[["adminPanel",()=>{$8("adminPanel").style.display="none"}],["userPop",()=>{$8("userPop").style.display="none"}],["shareModal",()=>{$8("shareModal").style.display="none"}],["deleteConfirmV5",()=>{$8("deleteConfirmV5").style.display="none"}]];
+ for(const [id,fn] of items){const el=$8(id);if(!el||el.querySelector(":scope > .popupCloseV8"))continue;el.classList.add("v8Closable");const b=document.createElement("button");b.type="button";b.className="popupCloseV8";b.textContent="×";b.setAttribute("aria-label","Kapat");b.onclick=e=>{e.preventDefault();e.stopPropagation();fn()};el.prepend(b)}
+ const ap=$8("adminPanel");if(ap&&!$8("adminTitleV8")){const t=document.createElement("div");t.id="adminTitleV8";t.className="panelTitleV8";t.textContent="Yönetici Paneli";ap.prepend(t)}
+}
+function applyV8Language(code){
+ code=LANG8[code]?code:"en";window.__ANALYZER_LANG_V8=code;const d=lang8(code);ensurePopupClose8();enforceBrand8();
+ textOnly($8("adminBtn"),d.admin);textOnly($8("adminTitleV8"),d.admin);textOnly($8("mainShareBtn"),d.shareFiles);textOnly($8("faultGoV7"),d.faultGo);
+ const nh=$8("notificationsHeadV7")?.querySelector("span");if(nh)nh.textContent=d.notifications;const ft=$8("faultTechHead");if(ft){const close=ft.querySelector("button");[...ft.childNodes].filter(n=>n.nodeType===3).forEach(n=>n.remove());ft.insertBefore(document.createTextNode(d.faultOrder+" "),close||null)}
+ const sh=$8("shareHeadV5")?.querySelector("span");if(sh)sh.textContent=d.shareFiles;
+ const labels=$8("shareModalV5")?.querySelectorAll(".shareField>label");if(labels?.[0])labels[0].textContent=d.user;if(labels?.[1])labels[1].textContent=d.duration;if(labels?.[2])labels[2].textContent=d.shownFiles;
+ const radios=$8("shareModalV5")?.querySelectorAll(".shareMode label");if(radios?.[0])labelWithInput("#shareModalV5 .shareMode label:nth-child(1)"," "+d.allFiles);if(radios?.[1])labelWithInput("#shareModalV5 .shareMode label:nth-child(2)"," "+d.selectedFiles);
+ textOnly($8("startShareV5"),d.showFiles);const activeTitle=$8("shareActiveListV5")?.parentElement?.querySelector("b");if(activeTitle)activeTitle.textContent=d.activeShares;
+ textOnly($8("newFile2"),d.newFile);
+ document.querySelectorAll(".presenceTextV8").forEach(x=>x.textContent=x.dataset.presence==="online"?d.online:d.offline);
+ document.querySelectorAll("[data-v8-label]").forEach(x=>{const k=x.dataset.v8Label;if(d[k])x.textContent=d[k]});
+ document.querySelectorAll("#library .libSharePick").forEach(l=>{const inp=l.querySelector("input");if(inp){[...l.childNodes].filter(n=>n.nodeType===3).forEach(n=>n.remove());l.append(document.createTextNode(d.share))}});document.querySelectorAll("#library .librow>button.mini:last-child").forEach(b=>b.textContent=d.del);
+ document.querySelectorAll(".popupCloseV8,#mx,#faultTechClose,#shareCloseV5,#notificationsCloseV7").forEach(b=>b.setAttribute("aria-label",d.close));
+}
+window.applyV8Language=applyV8Language;
+
+function setAuthMode8(mode){const l=$8("loginView"),r=$8("regView"),bl=$8("authTopLogin"),br=$8("authTopRegister");if(!l||!r)return;l.style.display=mode==="login"?"block":"none";r.style.display=mode==="register"?"block":"none";bl?.classList.toggle("active",mode==="login");br?.classList.toggle("active",mode==="register");setTimeout(()=>{(mode==="login"?$8("loginMail"):$8("regMail"))?.focus()},30)}
+$8("authTopLogin")?.addEventListener("click",()=>setAuthMode8("login"));$8("authTopRegister")?.addEventListener("click",()=>setAuthMode8("register"));
+$8("toLogin")?.addEventListener("click",()=>setAuthMode8("login"));$8("toReg")?.addEventListener("click",()=>setAuthMode8("register"));
+
+/* Keep the selected language applied to V5/V6/V7 controls as well as the original UI. */
+try{const base=setLang;window.setLang=function(code){base(code);setTimeout(()=>applyV8Language(code),0)};setLang=window.setLang}catch{}
+const sel=$8("langSelect");if(sel)sel.addEventListener("change",()=>setTimeout(()=>applyV8Language(sel.value),0));
+
+/* Dynamic popups and library rows are translated whenever they are rebuilt. */
+let mutBusy=false;const mo=new MutationObserver(()=>{if(mutBusy)return;mutBusy=true;requestAnimationFrame(()=>{ensurePopupClose8();enforceBrand8();applyV8Language(window.__ANALYZER_LANG_V8||localStorage.getItem("analyzer_lang")||"en");mutBusy=false})});mo.observe(document.body,{childList:true,subtree:true});
+
+ensurePopupClose8();enforceBrand8();applyV8Language(localStorage.getItem("analyzer_lang")||"en");
 })();
 </script>
 
