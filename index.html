@@ -1082,4 +1082,204 @@ window.openShareDialog=openShareDialog;
 cloudInit();
 if(ANALYZER_SB){setInterval(()=>cloudHeartbeat(true),30000);window.addEventListener("beforeunload",()=>cloudHeartbeat(false))}
 </script>
+<style id="analyzerV5CSS">
+/* ANALYZER V5 — admin, sharing, delete confirm, compact circuit list, deep fault analysis */
+#adminPanel{right:2vw!important;top:58px!important;width:min(820px,96vw)!important;max-height:86vh!important;padding:18px!important;border:2px solid #8fa4ad!important;border-radius:14px!important;box-shadow:0 22px 70px #0005!important}
+#adminPanel> b{font-size:20px;display:block;margin-bottom:10px}
+#adminUsers .userrow{grid-template-columns:18px 1fr!important;padding:12px!important;cursor:pointer;border-radius:8px}
+#adminUsers .userrow:hover{background:#eef6f7}
+#adminDetail{margin-top:14px;padding:14px;border:1px solid #cbd7dc;border-radius:10px;background:#f8fbfc;min-height:80px;line-height:1.55}
+.adminShareLine{margin-top:7px;padding:8px;border-left:4px solid #e6b800;background:#fffbe7;border-radius:5px}
+#userPop{min-width:360px!important;max-width:min(560px,92vw)!important}
+
+#mainShareBtn{width:100%;margin:0 0 10px;border:2px solid #e5b700;background:#fff8cf;color:#1e262a;font-weight:900;letter-spacing:.3px}
+#shareModal{display:none!important}
+#shareModalV5{position:fixed;z-index:97000;left:50%;top:18%;transform:translateX(-50%);width:min(520px,92vw);max-height:76vh;overflow:auto;background:#fff;color:#111;border:4px solid #e5b700;border-radius:14px;box-shadow:0 18px 60px #0005;display:none}
+#shareModalV5 .shareHead{padding:11px 13px;background:#fff8cf;border-bottom:2px solid #e5b700;font-weight:900;cursor:move;user-select:none;display:flex;justify-content:space-between;align-items:center}
+#shareModalV5 .shareBody{padding:14px}
+.shareField{margin:10px 0}.shareField label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}.shareField input[type=text],.shareField select{width:100%;padding:10px;border:1px solid #aebbc1;border-radius:8px;background:#fff;color:#111;font-size:15px}
+.shareNameWrap{display:grid;grid-template-columns:1fr 34px;gap:7px;align-items:center}.shareUserTick{font-size:25px;text-align:center;font-weight:900}.shareUserTick.ok{color:#12a052}.shareUserTick.no{color:#c43838}
+.shareMode{display:grid;gap:7px;padding:9px;border:1px solid #dfc74a;border-radius:8px;background:#fffdf1}.shareMode label{display:flex;gap:8px;align-items:center;font-weight:700;margin:0}
+#shareCountdown{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:25px;font-weight:900;text-align:center;padding:8px;border:1px dashed #d3a900;border-radius:8px;background:#fffdf1;margin:7px 0 10px}
+.shareSelectedInfo{font-size:12px;padding:8px;background:#f8f8f8;border-radius:7px;max-height:105px;overflow:auto}.shareAction{width:100%;padding:12px;border:0;border-radius:8px;background:#172d38;color:#fff;font-weight:900;cursor:pointer}.shareMsg{height:20px;text-align:center;font-weight:800;color:#138a4b;margin-top:7px}.shareActiveList{margin-top:12px;border-top:1px solid #ddd;padding-top:10px}.shareActiveCard{padding:8px;margin:6px 0;border:1px solid #e8d46c;border-radius:8px;background:#fffdf0;font-size:12px;line-height:1.45}
+
+#deleteConfirmV5{position:fixed;z-index:98000;left:50%;top:34%;transform:translate(-50%,-50%);width:min(430px,90vw);display:none;background:#fff3bf;color:#111;border:4px solid #d82c2c;border-radius:12px;box-shadow:0 18px 55px #0005;padding:16px}
+#deleteConfirmV5 .deleteText{font-weight:800;line-height:1.5;margin-bottom:14px}.deleteBtns{display:flex;gap:9px;justify-content:flex-end}.deleteBtns button{border:0;border-radius:7px;padding:10px 13px;font-weight:900;cursor:pointer}.deleteBack{background:#e6ecef}.deleteGo{background:#c92d2d;color:#fff}
+.libSharePick{display:flex;align-items:center;gap:4px;font-size:11px;background:#fff8cf;color:#17232d;border-radius:5px;padding:4px 6px;white-space:nowrap}.libSharePick input{width:18px;height:18px;accent-color:#0aa58d}
+
+/* Compact, readable circuit element list: no pale route box */
+.left #elements .item{background:#ffffff0d!important;color:#fff!important;padding:9px 10px!important;margin:6px 0!important}
+.left #elements .item b{display:block;color:#fff;font-size:14px;line-height:1.25}.left #elements .item small{display:block;color:#d9e7ec!important;opacity:1!important;margin-top:3px;font-weight:700}
+.left #elements .eqRouteBox{display:none!important}
+.refMark{border:4px solid #e32626!important;background:rgba(255,255,255,.08)!important;border-radius:50%!important;box-shadow:0 0 0 3px #fff,0 0 13px #d91919!important}
+
+#faultTechModal{width:min(820px,92vw)!important;left:50%!important;top:13%!important;transform:translateX(-50%);max-height:78vh!important;border:2px solid #7d929c!important}
+#faultTechModal .faultSummary{padding:10px;background:#eef5f7;border-radius:8px;margin-bottom:8px;line-height:1.5}
+.faultFileBlock{border:1px solid #ccd8dd;border-radius:9px;margin:10px 0;overflow:hidden}.faultFileTitle{background:#17323e;color:#fff;padding:9px 10px;font-weight:900}.faultRefRow{padding:10px;border-top:1px solid #e3e9ec;cursor:pointer;background:#fff}.faultRefRow:hover{background:#f1f8f7}.faultRefRow small{display:block;color:#61737b;margin-top:3px}.faultCheck{margin-top:5px;padding:7px;background:#fff8df;border-left:4px solid #e1b600;line-height:1.45}.faultSafety{padding:9px;background:#fff1f1;border:1px solid #e8b2b2;border-radius:7px;margin-top:10px;font-size:12px}
+</style>
+<script id="ANALYZER_V5_PATCH">
+(()=>{
+"use strict";
+const CENTER_V5="aygungurcan@gmail.com", ACCOUNT_KEY_V5="analyzer_accounts_v1", SESSION_KEY_V5="analyzer_session_v1", SHARE_KEY_V5="analyzer_shares_v2", SHARE_PICK_KEY_V5="analyzer_share_selected_v1";
+const $v=id=>document.getElementById(id), nowV=()=>Date.now();
+const readJSON=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch{return d}};
+const writeJSON=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const sessionV=()=>{try{return JSON.parse(sessionStorage.getItem(SESSION_KEY_V5)||"null")}catch{return null}};
+const currentMailV=()=>sessionV()?.mail||"";
+const accountsV=()=>readJSON(ACCOUNT_KEY_V5,[]);
+const libV=()=>{try{return JSON.parse(localStorage.getItem("aheLib")||"[]")}catch{return[]}};
+const setLibV=a=>{localStorage.setItem("aheLib",JSON.stringify(a));};
+const escV=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function displayNameByMailV(mail){const u=accountsV().find(x=>x.mail===mail);return u?.name||mail||"—"}
+function ownerForRowV(f){return f.ownerMail||CENTER_V5}
+function activeSharesV(){const t=nowV();return readJSON(SHARE_KEY_V5,[]).filter(s=>!s.ended&&Number(s.expiresAt)>t)}
+function allSharesV(){return readJSON(SHARE_KEY_V5,[])}
+function saveSharesV(a){writeJSON(SHARE_KEY_V5,a)}
+function sharePicksV(){return new Set(readJSON(SHARE_PICK_KEY_V5,[]))}
+function saveSharePicksV(s){writeJSON(SHARE_PICK_KEY_V5,[...s])}
+function fmtRemainV(ms){ms=Math.max(0,Number(ms)||0);const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`}
+function durLabelV(ms){return ({3600000:"1 saat",10800000:"3 saat",18000000:"5 saat",86400000:"24 saat"})[ms]||fmtRemainV(ms)}
+
+/* Remove the retired V1 sharing settings once. */
+if(!localStorage.getItem("analyzer_share_v2_migrated")){localStorage.removeItem("analyzer_shares_v1");localStorage.setItem("analyzer_share_v2_migrated","1")}
+
+function ensureLegacyOwnersV(){
+ const mail=currentMailV(); if(mail!==CENTER_V5)return;
+ let a=libV(),changed=false;a=a.map(f=>{if(!f.ownerMail){changed=true;return {...f,ownerMail:CENTER_V5}}return f});if(changed)setLibV(a)
+}
+ensureLegacyOwnersV();
+
+/* Keep file metadata owned by the logged-in user; legacy rows are preserved. */
+window.saveMeta=function(f){
+ let a=libV(),old=a.find(x=>x.name===f.name),mail=currentMailV()||old?.ownerMail||CENTER_V5;
+ a=a.filter(x=>x.name!==f.name);a.unshift({...old,name:f.name,size:f.size,time:old?.time||Date.now(),ownerMail:old?.ownerMail||mail});setLibV(a);window.renderLib?.();
+};
+
+function fileCountV(mail){
+ const a=libV();return a.filter(f=>ownerForRowV(f)===mail).length;
+}
+function shareSummaryForV(mail){
+ const rows=activeSharesV().filter(s=>s.fromMail===mail),count=rows.reduce((n,s)=>n+(s.fileNames?.length||0),0);
+ const by=new Map();for(const s of rows){const k=s.toName||s.toMail||"Kullanıcı";const z=by.get(k)||{n:0,until:0};z.n+=(s.fileNames?.length||0);z.until=Math.max(z.until,Number(s.expiresAt)||0);by.set(k,z)}
+ return {count,rows,lines:[...by.entries()].map(([name,z])=>`${name}: ${z.n} dosya • kalan ${fmtRemainV(z.until-nowV())}`)}
+}
+function durAdminV(ms){let m=Math.floor(Math.max(0,ms)/60000),h=Math.floor(m/60);return h+" sa "+(m%60)+" dk"}
+function onlineAdminV(u){return u.online&&nowV()-(u.lastSeen||0)<90000}
+function renderAdminV5(){
+ const ss=sessionV();if(!ss||ss.mail!==CENTER_V5)return;ensureLegacyOwnersV();
+ const p=$v("adminPanel"),root=$v("adminUsers");if(!p||!root)return;
+ let detail=$v("adminDetail");if(!detail){detail=document.createElement("div");detail.id="adminDetail";detail.innerHTML="Bir kullanıcının ayrıntılarını görmek için adına dokunun.";p.appendChild(detail)}
+ const a=accountsV();root.innerHTML=a.map((u,i)=>`<div class="userrow" data-admin-user="${i}"><span class="led ${onlineAdminV(u)?"on":"offl"}"></span><div><div class="uname">${escV(u.name)}</div><div class="umail">${escV(u.mail)}</div></div></div>`).join("")||"<div class='count'>Kayıtlı kullanıcı yok.</div>";
+ root.querySelectorAll("[data-admin-user]").forEach(row=>row.onclick=()=>showAdminUserV(a[Number(row.dataset.adminUser)]));
+}
+function showAdminUserV(u){
+ const ss=sessionV(),live=ss&&ss.mail===u.mail?nowV()-ss.start:0,sh=shareSummaryForV(u.mail),detail=$v("adminDetail");if(!detail)return;
+ detail.innerHTML=`<b style="font-size:18px">${escV(u.name)}</b><br>${escV(u.mail)}<hr>Toplam giriş: <b>${u.loginCount||0}</b><br>Toplam kullanım süresi: <b>${durAdminV((u.totalMs||0)+live)}</b><br>Yüklediği dosya: <b>${fileCountV(u.mail)}</b><br>Aktif paylaştığı dosya: <b>${sh.count}</b>${sh.lines.length?`<div class="adminShareLine"><b>Paylaştığı kullanıcılar</b><br>${sh.lines.map(escV).join("<br>")}</div>`:"<div class='adminShareLine'>Aktif dosya paylaşımı yok.</div>"}`;
+}
+const adminBtnV=$v("adminBtn");if(adminBtnV)adminBtnV.onclick=e=>{e.stopPropagation();const p=$v("adminPanel");p.style.display=p.style.display==="block"?"none":"block";if(p.style.display==="block")renderAdminV5()};
+
+/* Compact file library with share checkbox and safe delete flow. */
+function currentOwnerFilesV(){const m=currentMailV()||CENTER_V5;return libV().filter(f=>ownerForRowV(f)===m)}
+window.renderLib=function(){
+ const a=libV(),picked=sharePicksV(),root=$v("library");if(!root)return;
+ root.innerHTML=a.length?a.map((f,i)=>`<div class="item librow"><button class="mini" style="flex:1;text-align:left;padding:8px;background:#fff;color:#172733;min-width:0" onclick='openLibFile(${JSON.stringify(f.name)})'><b>${i+1}.</b> 📄 ${escV(f.name)}</button><label class="libSharePick" title="Dosya paylaşımında seç"><input type="checkbox" data-share-pick="${i}" ${picked.has(f.name)?"checked":""}>Paylaş</label><button class="mini" onclick="delLib(${i})">Sil</button></div>`).join(""):`<div class="count">${typeof L==="function"?L("libraryEmpty"):"Kütüphane boş."}</div>`;
+ root.querySelectorAll("[data-share-pick]").forEach(ch=>ch.onchange=()=>{const f=a[Number(ch.dataset.sharePick)],s=sharePicksV();if(!f)return;ch.checked?s.add(f.name):s.delete(f.name);saveSharePicksV(s);updateShareSelectedInfoV()});
+};
+
+function ensureDeleteModalV(){if($v("deleteConfirmV5"))return;$v("toast")?.insertAdjacentHTML("afterend",`<div id="deleteConfirmV5"><div class="deleteText" id="deleteTextV5"></div><div class="deleteBtns" id="deleteBtnsV5"></div></div>`)}
+ensureDeleteModalV();
+let pendingDeleteIndexV=-1;
+window.delLib=function(i){
+ const a=libV(),f=a[i];if(!f)return;pendingDeleteIndexV=i;const m=$v("deleteConfirmV5"),txt=$v("deleteTextV5"),btn=$v("deleteBtnsV5"),shared=activeSharesV().filter(s=>(s.fileNames||[]).includes(f.name));
+ txt.innerHTML=shared.length?`<b>${escV(shared.map(s=>s.toName||s.toMail).join(", "))}</b> isimli kullanıcı ile paylaştığınız <b>${escV(f.name)}</b> dosyası silinecek ve paylaşım bitirilecek.`:`Bu dosya kalıcı olarak uygulamadan silinecek.<br><b>${escV(f.name)}</b>`;
+ btn.innerHTML=shared.length?`<button class="deleteBack" id="deleteCancelV5">İptal et</button><button class="deleteGo" id="deleteYesV5">Evet dosyayı sil</button>`:`<button class="deleteBack" id="deleteCancelV5">Geri dön</button><button class="deleteGo" id="deleteYesV5">Sil</button>`;
+ m.style.display="block";$v("deleteCancelV5").onclick=()=>{m.style.display="none";pendingDeleteIndexV=-1};$v("deleteYesV5").onclick=()=>deleteConfirmedV5();
+};
+async function deleteConfirmedV5(){
+ const a=libV(),f=a[pendingDeleteIndexV];if(!f)return;const name=f.name;a.splice(pendingDeleteIndexV,1);setLibV(a);
+ try{await deleteLibraryFile(name)}catch{}try{await deleteScanCache(name)}catch{}
+ const picks=sharePicksV();picks.delete(name);saveSharePicksV(picks);
+ let shares=allSharesV().map(s=>{if(!(s.fileNames||[]).includes(name))return s;const files=s.fileNames.filter(x=>x!==name);return {...s,fileNames:files,ended:files.length?!!s.ended:true,endedAt:files.length?s.endedAt:nowV()}});saveSharesV(shares);
+ if(window.ANALYZER_SB&&f.cloudId){try{await cloudDeleteFile(f.cloudId,f.storagePath||"")}catch(e){console.warn(e)}}
+ $v("deleteConfirmV5").style.display="none";pendingDeleteIndexV=-1;window.renderLib();renderAdminV5();updateShareSelectedInfoV();
+}
+window.renderLib();
+
+/* New draggable sharing popup. */
+function ensureShareUIV(){
+ if($v("mainShareBtn"))return;
+ const tabs=document.querySelector("aside.right .tabs");if(tabs){const b=document.createElement("button");b.id="mainShareBtn";b.className="btn";b.textContent="DOSYA PAYLAŞ";tabs.parentElement.insertBefore(b,tabs);b.onclick=toggleSharePopupV}
+ document.body.insertAdjacentHTML("beforeend",`<div id="shareModalV5"><div class="shareHead" id="shareHeadV5"><span>DOSYA PAYLAŞ</span><button class="mini" id="shareCloseV5">×</button></div><div class="shareBody"><div class="shareField"><label>Kullanıcı adı</label><div class="shareNameWrap"><input id="shareUserNameV5" type="text" list="shareUsersV5" autocomplete="off"><span id="shareUserTickV5" class="shareUserTick"></span></div><datalist id="shareUsersV5"></datalist><div id="shareUserStateV5" class="nameState"></div></div><div class="shareField"><label>Paylaşım süresi</label><select id="shareDurationV5"><option value="3600000">1 saat</option><option value="10800000">3 saat</option><option value="18000000">5 saat</option><option value="86400000">24 saat</option></select></div><div id="shareCountdown">00:00:00</div><div class="shareField"><label>Gösterilecek dosyalar</label><div class="shareMode"><label><input type="radio" name="shareModeV5" value="all"> Tüm dosyalarımı göster</label><label><input type="radio" name="shareModeV5" value="selected" checked> Seçili dosyalarımı göster</label></div></div><div id="shareSelectedInfoV5" class="shareSelectedInfo"></div><button id="startShareV5" class="shareAction">DOSYA GÖSTER</button><div id="shareMsgV5" class="shareMsg"></div><div class="shareActiveList"><b>Aktif paylaşımlarım</b><div id="shareActiveListV5"></div></div></div></div>`);
+ $v("shareCloseV5").onclick=()=>closeSharePopupV();$v("shareUserNameV5").addEventListener("input",validateShareUserV);document.querySelectorAll('input[name="shareModeV5"]').forEach(r=>r.onchange=updateShareSelectedInfoV);$v("startShareV5").onclick=startShareV5;
+ document.addEventListener("dblclick",e=>{const m=$v("shareModalV5");if(m?.style.display==="block"&&!m.contains(e.target)&&e.target!==$v("mainShareBtn"))closeSharePopupV()});
+ makeDraggableV($v("shareModalV5"),$v("shareHeadV5"));
+}
+function makeDraggableV(box,head){let d=false,dx=0,dy=0;head.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;d=true;const r=box.getBoundingClientRect();dx=e.clientX-r.left;dy=e.clientY-r.top;box.style.transform="none";head.setPointerCapture?.(e.pointerId)});head.addEventListener("pointermove",e=>{if(!d)return;box.style.left=Math.max(0,Math.min(innerWidth-box.offsetWidth,e.clientX-dx))+"px";box.style.top=Math.max(0,Math.min(innerHeight-box.offsetHeight,e.clientY-dy))+"px"});head.addEventListener("pointerup",()=>d=false);head.addEventListener("pointercancel",()=>d=false)}
+function registeredMatchV(name){const n=String(name||"").trim().toLocaleLowerCase("tr-TR"),me=currentMailV();return accountsV().find(u=>u.mail!==me&&String(u.name||"").trim().toLocaleLowerCase("tr-TR")===n)||null}
+function validateShareUserV(){const u=registeredMatchV($v("shareUserNameV5")?.value),tick=$v("shareUserTickV5"),state=$v("shareUserStateV5");if(!tick)return null;if(u){tick.textContent="✓";tick.className="shareUserTick ok";state.textContent="Kayıtlı kullanıcı bulundu.";state.className="nameState nameOK"}else{tick.textContent=$v("shareUserNameV5")?.value?"×":"";tick.className="shareUserTick no";state.textContent=$v("shareUserNameV5")?.value?"Kayıtlı kullanıcı bulunamadı.":"";state.className="nameState nameNO"}return u}
+function updateShareSelectedInfoV(){const box=$v("shareSelectedInfoV5");if(!box)return;const mode=document.querySelector('input[name="shareModeV5"]:checked')?.value||"selected",owned=currentOwnerFilesV(),picks=sharePicksV(),files=mode==="all"?owned:owned.filter(f=>picks.has(f.name));box.innerHTML=`<b>${mode==="all"?"Tüm dosyalar":"Seçili dosyalar"} (${files.length})</b><br>${files.length?files.map(f=>"• "+escV(f.name)).join("<br>"):"Dosya seçilmedi."}`}
+function latestActiveShareV(){const me=currentMailV();return activeSharesV().filter(s=>s.fromMail===me).sort((a,b)=>b.startedAt-a.startedAt)[0]||null}
+function renderActiveSharesV(){const root=$v("shareActiveListV5");if(!root)return;const me=currentMailV(),rows=activeSharesV().filter(s=>s.fromMail===me).sort((a,b)=>b.startedAt-a.startedAt);root.innerHTML=rows.length?rows.map(s=>`<div class="shareActiveCard"><b>${escV(s.toName||s.toMail)}</b><br>${(s.fileNames||[]).map(escV).join(", ")}<br>Kalan: <b data-share-exp="${Number(s.expiresAt)}">${fmtRemainV(Number(s.expiresAt)-nowV())}</b></div>`).join(""):"<div class='count'>Aktif paylaşım yok.</div>"}
+function restoreSharePopupStateV(){const dl=$v("shareUsersV5");if(dl)dl.innerHTML=accountsV().filter(u=>u.mail!==currentMailV()).map(u=>`<option value="${escV(u.name)}"></option>`).join("");const s=latestActiveShareV();if(s){$v("shareUserNameV5").value=s.toName||"";$v("shareDurationV5").value=String(s.durationMs||3600000);const r=document.querySelector(`input[name="shareModeV5"][value="${s.mode||"selected"}"]`);if(r)r.checked=true}validateShareUserV();updateShareSelectedInfoV();renderActiveSharesV();updateCountdownV()}
+function openSharePopupV(){const m=$v("shareModalV5");m.style.display="block";if(!m.dataset.positioned){m.style.left="50%";m.style.top="18%";m.style.transform="translateX(-50%)";m.dataset.positioned="1"}restoreSharePopupStateV()}
+function closeSharePopupV(){$v("shareModalV5").style.display="none"}
+function toggleSharePopupV(){const m=$v("shareModalV5");m.style.display==="block"?closeSharePopupV():openSharePopupV()}
+async function startShareV5(){
+ const u=validateShareUserV();if(!u){$v("shareUserStateV5").textContent="Paylaşım için kayıtlı bir kullanıcı adı girin.";return}
+ const mode=document.querySelector('input[name="shareModeV5"]:checked')?.value||"selected",owned=currentOwnerFilesV(),picks=sharePicksV(),files=mode==="all"?owned:owned.filter(f=>picks.has(f.name));if(!files.length){$v("shareMsgV5").style.color="#b42318";$v("shareMsgV5").textContent="Paylaşılacak dosya yok. Kütüphaneden Paylaş kutucuğunu seçin.";setTimeout(()=>{$v("shareMsgV5").textContent="";$v("shareMsgV5").style.color="#138a4b"},3000);return}
+ const dur=Number($v("shareDurationV5").value),me=currentMailV()||CENTER_V5,rec={id:(crypto.randomUUID?.()||String(nowV())),fromMail:me,fromName:displayNameByMailV(me),toMail:u.mail,toName:u.name,fileNames:files.map(f=>f.name),fileIds:files.map(f=>f.cloudId).filter(Boolean),mode,durationMs:dur,startedAt:nowV(),expiresAt:nowV()+dur,ended:false};const sh=allSharesV();sh.push(rec);saveSharesV(sh);
+ if(window.ANALYZER_SB&&rec.fileIds.length){try{await cloudShare(rec.fileIds,u.id||u.cloudId,dur)}catch(e){console.warn("Cloud share:",e)}}
+ $v("shareMsgV5").style.color="#138a4b";$v("shareMsgV5").textContent="Dosya paylaşma işlemi başlatıldı";setTimeout(()=>{$v("shareMsgV5").textContent=""},3000);renderActiveSharesV();updateCountdownV();renderAdminV5();
+}
+function updateCountdownV(){const s=latestActiveShareV(),c=$v("shareCountdown");if(c)c.textContent=s?fmtRemainV(Number(s.expiresAt)-nowV()):"00:00:00";document.querySelectorAll("[data-share-exp]").forEach(x=>x.textContent=fmtRemainV(Number(x.dataset.shareExp)-nowV()))}
+ensureShareUIV();setInterval(()=>{updateCountdownV();if($v("shareModalV5")?.style.display==="block")renderActiveSharesV()},1000);
+
+/* Compact circuit list: ref/type + correct page only. Click jumps and draws a red circle. */
+window.renderResults=function(emap,qmap){
+ emap=typeof uniqueCircuitMap==="function"?uniqueCircuitMap(emap):emap;qmap=typeof uniqueEquipmentMap==="function"?uniqueEquipmentMap(qmap):qmap;window.globalEmap=emap;window.globalQmap=qmap;
+ currentElements=[...emap.values()].sort((a,b)=>(a.ref||a.name||"").localeCompare((b.ref||b.name||""),undefined,{numeric:true}));currentEquipment=[...qmap.values()].sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+ $v("elCount").textContent=typeof L==="function"?L("foundEl",{n:currentElements.length}):`${currentElements.length} eleman bulundu`;$v("eqCount").textContent=typeof L==="function"?L("foundEq",{n:currentEquipment.length}):`${currentEquipment.length} ekipman bulundu`;
+ $v("elements").innerHTML=currentElements.length?currentElements.map((e,i)=>{const ref=e.ref||e.name||"?",ps=[...(e.pages||[])].map(Number).sort((a,b)=>a-b);return `<div class="item" data-v5-e="${i}"><b>${escV(ref)} ${escV(e.type||refType(ref))}</b><small>Sayfa: ${ps.join(", ")||"—"}</small></div>`}).join(""):`<div class="count">Devre elemanlarını çıkarmak için ŞEMAYI TARA düğmesine bas.</div>`;
+ $v("equipment").innerHTML=currentEquipment.length?currentEquipment.map((e,i)=>`<div class="item" data-v5-q="${i}"><b>${escV(e.name)}</b><br><small>${escV(e.kind||"")} • Sayfa: ${[...(e.pages||[])].join(", ")}</small></div>`).join(""):`<div class="count">${typeof L==="function"?L("eqEmpty"):"Ekipman listesi boş."}</div>`;
+ document.querySelectorAll("[data-v5-e]").forEach(x=>x.onclick=()=>{const e=currentElements[Number(x.dataset.v5E)],p=[...(e.pages||[])].map(Number).sort((a,b)=>a-b)[0]||1;document.querySelectorAll("[data-v5-e]").forEach(y=>y.classList.remove("active"));x.classList.add("active");highlightRef(e.ref||e.name,p)});
+ document.querySelectorAll("[data-v5-q]").forEach(x=>x.onclick=()=>{const e=currentEquipment[Number(x.dataset.v5Q)],p=[...(e.pages||[])].map(Number).sort((a,b)=>a-b)[0]||1;jump(p);show(e.name,`<b>Sınıf:</b> ${escV(e.kind||"")}<br><b>Bulunduğu sayfalar:</b> ${[...(e.pages||[])].join(", ")}`)});
+};
+
+/* More detailed electrical fault knowledge. */
+window.techForRef=function(ref){
+ const r=typeof canonicalCircuitRef==="function"?canonicalCircuitRef(ref):String(ref).toUpperCase(),p=(r.match(/^[A-Z]+/)||[""])[0];
+ const m={
+  F:["Sigorta",1,"LOTO sonrası süreklilik ve her iki uçta gerilim kontrolü yap. Sigorta açıksa sadece değiştirme; kısa devre/aşırı akım nedenini bul, doğru tip ve amper değeriyle değiştir."],FU:["Sigorta",1,"Enerjiyi kes, süreklilik ölç. Açık devrede downstream kısa devre/kaçak/aşırı yük ihtimalini kontrol et; aynı karakteristikte sigorta kullan."],Q:["Şalter/Kesici",2,"Mekanik konumu, giriş/çıkış gerilimini ve enerji kesikken kontak sürekliliğini kontrol et. Yardımcı kontak varsa kumanda devresiyle birlikte doğrula."],QF:["Devre kesici",2,"Trip/ON/OFF durumunu, giriş/çıkış gerilimlerini, termik-manyetik açma nedenini ve yardımcı kontakları kontrol et."],CB:["Devre kesici",2,"Kesici giriş-çıkış gerilimi, trip nedeni, kontak sürekliliği ve yardımcı kontak durumunu kontrol et."],X:["Terminal/Klemens",2,"Gevşeklik, oksitlenme, ısınma izi ve kablo kopukluğu ara. Enerji kesikken uçtan uca süreklilik ve gerektiğinde voltaj düşümü ölç."],B:["Sensör",3,"Sensör beslemesini, ortak/0V referansını ve çıkış sinyalini ölç. Dijital sensörde NO/NC değişimini; analog sensörde beklenen 0–10 V / 4–20 mA aralığını şemaya göre doğrula."],S:["Anahtar/Sensör",3,"Besleme ve kontak durumunu kontrol et. NO/NC kontaklarını konuma göre süreklilikle doğrula; mekanik aktüasyonun gerçekten gerçekleştiğini gözle."],K:["Röle",4,"Bobin A1-A2 gerilimini ve bobin direncini kontrol et. NO/NC kontakların enerjisiz ve enerjili durumda doğru değiştiğini ölç; kontak yanması/direnci varsa değerlendir."],KA:["Röle",4,"Bobin beslemesi, bobin direnci ve kontak geçişini kontrol et. Kumanda sinyali var fakat röle çekmiyorsa bobin/çekirdek; röle çekiyor fakat çıkış yoksa kontakları incele."],KM:["Kontaktör",5,"A1-A2 kumanda gerilimini, bobin direncini, ana kontak giriş/çıkış gerilimlerini ve yardımcı NO/NC kontakları kontrol et. Faz kaybı ve kontak yanmasını araştır."],KT:["Zaman rölesi",6,"Besleme, tetikleme, zaman ayarı ve gecikmeli kontak değişimini doğrula. Giriş doğru olup çıkış gecikmesi oluşmuyorsa röleyi test et."],PS:["Güç kaynağı",6,"AC girişini, sigortasını, DC çıkış seviyesini ve yük altında gerilim düşümünü ölç. Ripple/aşırı ısınma ve kısa devre yükünü kontrol et."],T:["Trafo",6,"Primer besleme, sekonder gerilim, sigorta ve sargı sürekliliğini kontrol et. Enerji kesikken sargı direnci ve izolasyonu uygun prosedürle ölç."],D:["Diyot",6,"Enerji kesikken diyot test modunda ileri/ters yön ölç. İki yönde iletim kısa devreyi, iki yönde açık devre arızayı gösterebilir."],R:["Direnç",6,"Enerji kesikken devreden etkilenmeyecek şekilde direnç değerini ölç; renk/etiket değeri ve toleransla karşılaştır. Yanma/çatlak izi ara."],C:["Kondansatör",7,"Güvenli şekilde deşarj et. Kapasite/ESR ölçümü yap; şişme, sızıntı ve kısa devre kontrolü yap. Motor kondansatöründe nominal µF değerini doğrula."],H:["Gösterge/Lamba",7,"Besleme gerilimini, dönüş/0V hattını ve lambanın/LED'in kendisini kontrol et. Sinyal var fakat ışık yoksa eleman; sinyal yoksa upstream kumandayı takip et."],M:["Motor",8,"Faz/fazlar ve gerilim dengesini, kontaktör/termik çıkışını, sargı sürekliliğini ve gövde izolasyonunu uygun cihazla kontrol et. Mekanik sıkışma ve aşırı akımı da değerlendir."],PLC:["PLC",9,"Önce PLC beslemesi ve ortak referansı doğrula. İlgili giriş LED/sinyalini, program şartlarını ve çıkış LED/gerilimini sırayla kontrol et. Modül değişimini en son değerlendir."]
+ };
+ return m[p]||[typeof refType==="function"?refType(r):"Devre elemanı",7,"Besleme → koruma → kumanda → çıkış zincirini sırayla ölç. Kablo/terminal sürekliliğini, doğru gerilim seviyesini ve elemanın giriş-çıkış davranışını şemaya göre doğrula."];
+};
+window.showFaultGuide=function(){}; // retire the older shallow popup trigger
+function intersectPagesV(a,b){const s=new Set([...a].map(Number));return [...b].map(Number).filter(x=>s.has(x))}
+function pageScoresV(q,texts){const out=[];for(let p=1;p<texts.length;p++){const r=typeof scoreFaultText==="function"?scoreFaultText(texts[p],q):{score:0,hits:[]};if(r.score)out.push({p,score:r.score,hits:r.hits})}return out.sort((a,b)=>b.score-a.score)}
+function currentFaultModelV(q){
+ const eqHits=[];for(const e of(currentEquipment||[])){const r=scoreFaultText(`${e.name||""} ${e.kind||""}`,q);if(r.score)eqHits.push({e,score:r.score+8,hits:r.hits})}eqHits.sort((a,b)=>b.score-a.score);
+ const ps=pageScoresV(q,pageTexts||[]),best=ps[0]?.score||0,pageSet=new Set();eqHits.slice(0,6).forEach(x=>[...(x.e.pages||[])].forEach(p=>pageSet.add(Number(p))));ps.filter(x=>x.score>=Math.max(3,best*.55)).slice(0,10).forEach(x=>pageSet.add(Number(x.p)));
+ const refs=[];for(const e of(currentElements||[])){const overlap=intersectPagesV(e.pages||[],pageSet);if(overlap.length)refs.push({ref:e.ref||e.name,type:e.type||refType(e.ref||e.name),pages:overlap})}
+ refs.sort((a,b)=>techForRef(a.ref)[1]-techForRef(b.ref)[1]||a.ref.localeCompare(b.ref,undefined,{numeric:true}));return {eqHits,pages:[...pageSet].sort((a,b)=>a-b),refs};
+}
+function faultBlockHTMLV(file,model,isCurrent){
+ const eq=model.eqHits?.slice(0,8).map(x=>escV(x.e?.name||x.name||"")).filter(Boolean)||[],refs=model.refs||[];
+ return `<div class="faultFileBlock"><div class="faultFileTitle">${escV(file)}${isCurrent?" — açık dosya":""}</div><div style="padding:9px"><b>Eşleşen ekipman:</b> ${eq.length?eq.join(" • "):"Şema metni eşleşmesi"}<br><b>İlgili sayfalar:</b> ${(model.pages||[]).join(", ")||"—"}${!isCurrent?`<br><button class="mini" data-open-fault-file="${escV(file)}">Dosyayı aç</button>`:""}</div>${refs.length?refs.map(x=>{const t=techForRef(x.ref);return `<div class="faultRefRow" ${isCurrent?`data-fault-ref="${escV(x.ref)}" data-fault-page="${Number(x.pages?.[0]||1)}"`:""}><b>${escV(x.ref)} — ${escV(x.type||t[0])}</b><small>Sayfa: ${(x.pages||[]).join(", ")}</small><div class="faultCheck">${escV(t[2])}</div></div>`}).join(""):`<div style="padding:10px">Bu eşleşmede devre referansı çıkarılamadı.</div>`}</div>`;
+}
+async function cachedFaultModelsV(q,currentName){
+ const out=[],scans=await allScanCaches();for(const sc of scans){if(sc.name===currentName)continue;const eqHits=[];for(const [key,v] of(sc.equipment||[])){const r=scoreFaultText(`${key} ${v.name||""} ${v.kind||""}`,q);if(r.score)eqHits.push({name:v.name||key,e:{name:v.name||key,pages:new Set(v.pages||[])},score:r.score+8})}const ps=pageScoresV(q,sc.pages||[]),best=ps[0]?.score||0,pageSet=new Set();eqHits.slice(0,5).forEach(x=>[...(x.e.pages||[])].forEach(p=>pageSet.add(Number(p))));ps.filter(x=>x.score>=Math.max(3,best*.55)).slice(0,8).forEach(x=>pageSet.add(Number(x.p)));if(!pageSet.size)continue;const refs=[];for(const [key,v] of(sc.elements||[])){const overlap=intersectPagesV(v.pages||[],pageSet);if(overlap.length)refs.push({ref:key,type:v.type||refType(key),pages:overlap})}refs.sort((a,b)=>techForRef(a.ref)[1]-techForRef(b.ref)[1]||a.ref.localeCompare(b.ref,undefined,{numeric:true}));out.push({file:sc.name,eqHits,pages:[...pageSet].sort((a,b)=>a-b),refs})}return out.slice(0,5)
+}
+async function deepFaultV(q){
+ const modal=$v("faultTechModal"),body=$v("faultTechBody");if(!modal||!body)return;if(!(pageTexts?.length)||!currentFileName){body.innerHTML=`<div class="warn">Önce bir PDF açıp analizini tamamlayın.</div>`;modal.style.display="block";return}
+ body.innerHTML=`<div class="faultSummary"><b>Arıza:</b> ${escV(q)}<br>Şema metni, ekipman başlıkları ve aynı devre sayfalarında bulunan referanslar birlikte analiz ediliyor…</div>`;modal.style.display="block";
+ const cur=currentFaultModelV(q),others=await cachedFaultModelsV(q,currentFileName);let html=`<div class="faultSummary"><b>Arıza:</b> ${escV(q)}<br><b>${cur.refs.length}</b> ilişkili devre elemanı bulundu. Kontroller basitten karmaşığa sıralandı.</div>`+faultBlockHTMLV(currentFileName,cur,true);for(const o of others)html+=faultBlockHTMLV(o.file,o,false);html+=`<div class="faultSafety"><b>Güvenlik:</b> Ölçüm veya müdahale öncesinde uygun LOTO/izolasyon prosedürünü uygulayın ve gerilimsizliği uygun ölçü aletiyle doğrulayın. Canlı devrede ölçüm yalnız yetkili personel ve uygun PPE/prosedür ile yapılmalıdır.</div>`;body.innerHTML=html;
+ body.querySelectorAll("[data-fault-ref]").forEach(r=>r.onclick=()=>highlightRef(r.dataset.faultRef,Number(r.dataset.faultPage)));body.querySelectorAll("[data-open-fault-file]").forEach(b=>b.onclick=()=>openLibFile(b.dataset.openFaultFile));
+}
+const faultInputV=$v("fault");if(faultInputV)faultInputV.onkeydown=e=>{if(e.key!=="Enter")return;e.preventDefault();e.stopPropagation();const q=(e.target.value||"").trim();if(!q)return;deepFaultV(q)};
+
+/* Keep admin sharing/file counts fresh while the panel is open. */
+setInterval(()=>{if($v("adminPanel")?.style.display==="block"){const selected=$v("adminDetail")?.dataset?.mail;renderAdminV5()}},15000);
+})();
+</script>
+
 </body></html>
