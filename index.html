@@ -1,7 +1,15 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ANALYZER</title>
-<!-- ANALYZER V12 FIXED: shared-file analysis + V11 mobile layout -->
+<meta name="analyzer-build" content="V14.0-central-share">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script>
+window.ANALYZER_VERSION="V14.0-central-share";
+window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;
+</script>
+<!-- ANALYZER V14: permanent central sharing + shared-file analysis + mobile layout -->
 <style>
 :root{--d:#17232d;--r:#244b62;--a:#0aa58d;--line:#d8e1e6}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;height:100vh;overflow:hidden;background:#edf2f5;color:#17232d}
 header{height:116px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:14px 18px;position:relative}.brand{min-width:240px}.brand h1{margin:0;font-size:23px}.brand b{color:var(--a)}.brand small{color:#687782}
@@ -1021,7 +1029,7 @@ document.addEventListener("click",e=>{if(!$a("userPop").contains(e.target)&&!e.t
 const ss=session();if(ss){$a("authGate").classList.add("off");if(ss.mail===CENTER){$a("adminBtn").style.display="block";renderAdmin()}}
 })();
 </script>
-<script>window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;window.ANALYZER_VERSION="V13";</script>
+<script>window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;window.ANALYZER_VERSION="V14.0-central-share";</script>
 <script id="ANALYZER_CLOUD_V4">
 const ANALYZER_SUPABASE={
  enabled:true,
@@ -1751,14 +1759,42 @@ function shareState7(s){const active=!s.ended&&Number(s.expiresAt)>now7();return
 function fileButtons7(files){const local=new Set(json7("aheLib",[]).map(x=>x.name));return (files||[]).map(name=>local.has(name)?`<button class="notifyOpenV7" data-notify-open="${esc7(name)}">📄 ${esc7(name)}</button>`:`<div>• ${esc7(name)}</div>`).join("")}
 function card7(s,incoming){const st=shareState7(s),who=incoming?(s.fromName||accountName7(s.fromMail)):(s.toName||accountName7(s.toMail)),files=s.fileNames||[],active=st==="active";return `<div class="notifyCardV7 ${incoming?"incoming":""} ${active?"":"expired"}"><div class="notifyWhoV7">${incoming?"📥 "+esc7(who)+" sizinle paylaştı":"📤 "+esc7(who)+" ile paylaşıyorsunuz"}</div><div>${files.length} dosya • Başlangıç: ${esc7(fmtDate7(s.startedAt))}</div><div class="notifyFilesV7">${fileButtons7(files)||"Dosya bilgisi yok."}</div>${active?`Kalan süre: <span class="notifyTimerV7" data-notify-exp="${Number(s.expiresAt)}">${remain7(Number(s.expiresAt)-now7())}</span>`:`<b>${st==="ended"?"Paylaşım sonlandırıldı":"Paylaşım süresi sona erdi"}</b>`}</div>`}
 function renderNotificationsV7(markSeen=false){
- const body=$7("notificationsBodyV7");if(!body)return;const me=mail7(),all=json7(SHARE_KEY_V7,[]).slice().sort((a,b)=>(b.startedAt||0)-(a.startedAt||0));
+ const body=$7("notificationsBodyV7");if(!body)return;
+ /* V14: localStorage notifications are NEVER allowed in cloud mode.
+    This prevents the old V7 renderer from replacing Supabase results with zero. */
+ if(window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS){
+  if(typeof window.renderCloudNotifications9==="function"){
+   Promise.resolve(window.renderCloudNotifications9(markSeen)).catch(err=>{
+    body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Merkezi paylaşım okunamadı.</b><br>${esc7(err?.message||err)}</div>`;
+   });
+  }else{
+   body.innerHTML=`<div class="notifyEmptyV7"><b>Merkezi paylaşım sistemi başlatılıyor…</b><br>Supabase bağlantısı hazırlanıyor. Bu pencere otomatik yenilenecek.</div>`;
+  }
+  return;
+ }
+ const me=mail7(),all=json7(SHARE_KEY_V7,[]).slice().sort((a,b)=>(b.startedAt||0)-(a.startedAt||0));
  const incoming=all.filter(s=>s.toMail===me),outgoing=all.filter(s=>s.fromMail===me),inActive=incoming.filter(s=>shareState7(s)==="active"),outActive=outgoing.filter(s=>shareState7(s)==="active"),history=all.filter(s=>(s.toMail===me||s.fromMail===me)&&shareState7(s)!=="active").slice(0,8);
  body.innerHTML=`<div class="notifySectionV7"><div class="notifyTitleV7">GELEN PAYLAŞIMLAR (${inActive.length})</div>${inActive.length?inActive.map(s=>card7(s,true)).join(""):`<div class="notifyEmptyV7">Aktif gelen dosya paylaşımı yok.</div>`}</div><div class="notifySectionV7"><div class="notifyTitleV7">GÖNDERİLEN PAYLAŞIMLAR (${outActive.length})</div>${outActive.length?outActive.map(s=>card7(s,false)).join(""):`<div class="notifyEmptyV7">Aktif gönderilen dosya paylaşımı yok.</div>`}</div><div class="notifySectionV7"><div class="notifyTitleV7">SON PAYLAŞIM DURUMLARI</div>${history.length?history.map(s=>card7(s,s.toMail===me)).join(""):`<div class="notifyEmptyV7">Geçmiş paylaşım bildirimi yok.</div>`}</div>`;
  body.querySelectorAll("[data-notify-open]").forEach(b=>b.onclick=async()=>{try{await window.openLibFile?.(b.dataset.notifyOpen);$7("notificationsModalV7").style.display="none"}catch{}});
  if(markSeen&&me){localStorage.setItem(SEEN_KEY_V7+":"+me,String(now7()));updateNotificationBadgeV7()}
 }
 function updateNotificationBadgeV7(){const b=$7("notifyBadgeV7"),me=mail7();if(!b)return;const seen=Number(localStorage.getItem(SEEN_KEY_V7+":"+me)||0),n=json7(SHARE_KEY_V7,[]).filter(s=>s.toMail===me&&shareState7(s)==="active"&&Number(s.startedAt||0)>seen).length;b.textContent=String(n);b.style.display=n?"block":"none"}
-function toggleNotificationsV7(){const m=$7("notificationsModalV7");if(!m)return;if(m.style.display==="block"){m.style.display="none";return}renderNotificationsV7(false);m.style.display="block";setTimeout(()=>renderNotificationsV7(true),250)}
+async function toggleNotificationsV7(){
+ const m=$7("notificationsModalV7");if(!m)return;
+ if(m.style.display==="block"){m.style.display="none";return}
+ m.style.display="block";
+ if(window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS){
+  const body=$7("notificationsBodyV7");
+  if(body)body.innerHTML=`<div class="notifyEmptyV7"><b>Paylaşımlar Supabase üzerinden kontrol ediliyor…</b></div>`;
+  if(typeof window.renderCloudNotifications9==="function"){
+   try{await window.renderCloudNotifications9(true)}catch(err){
+    if(body)body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Merkezi paylaşım okunamadı.</b><br>${esc7(err?.message||err)}</div>`;
+   }
+  }
+  return;
+ }
+ renderNotificationsV7(false);setTimeout(()=>renderNotificationsV7(true),250)
+}
 
 /* 2) ARIZAYA GİT sits at the end of the fault row and performs the same action as Enter. */
 function runFaultFromInputV7(){const q=($7("fault")?.value||"").trim();if(!q){window.toast?.("Önce arızayı yazın.");$7("fault")?.focus();return}if(typeof window.analyzerFaultV6==="function")window.analyzerFaultV6(q);else if(typeof analyzerFaultV6==="function")analyzerFaultV6(q)}
@@ -2090,11 +2126,71 @@ async function openSharedFile9(id){
  }
 }
 function groupShares9(rows,keyFn){const m=new Map();for(const r of rows){const k=keyFn(r);let g=m.get(k);if(!g){g={...r,files:[]};m.set(k,g)}if(r.file)g.files.push(r.file)}return [...m.values()]}
-async function renderCloudNotifications9(mark=false){const body=$9("notificationsBodyV7");if(!body)return;window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;await refreshCloudShares9();const me=await user9();if(!me){body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Merkezi oturum bulunamadı.</b><br>Çıkış yapıp Supabase hesabınızla yeniden giriş yapın.</div>`;return}if(cloudShareError9){body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Paylaşım sunucusuna erişilemedi.</b><br>${esc9(cloudShareError9)}</div>`;return}const incoming=groupShares9(cloudShares9.filter(x=>x.recipient_id===me.id),r=>`${r.owner_id}|${r.created_at}|${r.expires_at}`),outgoing=groupShares9(cloudShares9.filter(x=>x.owner_id===me.id),r=>`${r.recipient_id}|${r.created_at}|${r.expires_at}`);const card=(g,inc)=>{const who=inc?(g.owner?.username||g.owner?.email||"Kullanıcı"):(g.recipient?.username||g.recipient?.email||"Kullanıcı"),remain=Date.parse(g.expires_at)-Date.now();return `<div class="notifyCardV7 ${inc?"incoming":""}"><div class="notifyWhoV7">${inc?"📥":"📤"} ${esc9(who)}</div><div>${g.files.length} dosya</div><div class="notifyFilesV7">${g.files.map(f=>inc?`<button class="cloudNotifyOpenV9" data-cloud-open-v9="${esc9(f.id)}">📄 ${esc9(f.name)}</button>`:`<div>• ${esc9(f.name)}</div>`).join("")||"Dosya bilgisi yok."}</div>Kalan süre: <span class="notifyTimerV7">${fmtRemain9(remain)}</span></div>`};body.innerHTML=`<div class="notifySectionV7"><div class="notifyTitleV7">GELEN PAYLAŞIMLAR (${incoming.length})</div>${incoming.length?incoming.map(x=>card(x,true)).join(""):`<div class="notifyEmptyV7">Aktif gelen dosya paylaşımı yok.</div>`}</div><div class="notifySectionV7"><div class="notifyTitleV7">GÖNDERİLEN PAYLAŞIMLAR (${outgoing.length})</div>${outgoing.length?outgoing.map(x=>card(x,false)).join(""):`<div class="notifyEmptyV7">Aktif gönderilen dosya paylaşımı yok.</div>`}</div><div class="cloudStatusV9">Supabase merkezi paylaşım sistemi aktif • V13</div>`;body.querySelectorAll("[data-cloud-open-v9]").forEach(b=>b.onclick=()=>openSharedFile9(b.dataset.cloudOpenV9));if(mark)localStorage.setItem(SEEN9+":"+me.id,String(Date.now()));}
+async function renderCloudNotifications9(mark=false){const body=$9("notificationsBodyV7");if(!body)return;window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;await refreshCloudShares9();const me=await user9();if(!me){body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Merkezi oturum bulunamadı.</b><br>Çıkış yapıp Supabase hesabınızla yeniden giriş yapın.</div>`;return}if(cloudShareError9){body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Paylaşım sunucusuna erişilemedi.</b><br>${esc9(cloudShareError9)}</div>`;return}const incoming=groupShares9(cloudShares9.filter(x=>x.recipient_id===me.id),r=>`${r.owner_id}|${r.created_at}|${r.expires_at}`),outgoing=groupShares9(cloudShares9.filter(x=>x.owner_id===me.id),r=>`${r.recipient_id}|${r.created_at}|${r.expires_at}`);const card=(g,inc)=>{const who=inc?(g.owner?.username||g.owner?.email||"Kullanıcı"):(g.recipient?.username||g.recipient?.email||"Kullanıcı"),remain=Date.parse(g.expires_at)-Date.now();return `<div class="notifyCardV7 ${inc?"incoming":""}"><div class="notifyWhoV7">${inc?"📥":"📤"} ${esc9(who)}</div><div>${g.files.length} dosya</div><div class="notifyFilesV7">${g.files.map(f=>inc?`<button class="cloudNotifyOpenV9" data-cloud-open-v9="${esc9(f.id)}">📄 ${esc9(f.name)}</button>`:`<div>• ${esc9(f.name)}</div>`).join("")||"Dosya bilgisi yok."}</div>Kalan süre: <span class="notifyTimerV7">${fmtRemain9(remain)}</span></div>`};body.innerHTML=`<div class="notifySectionV7"><div class="notifyTitleV7">GELEN PAYLAŞIMLAR (${incoming.length})</div>${incoming.length?incoming.map(x=>card(x,true)).join(""):`<div class="notifyEmptyV7">Aktif gelen dosya paylaşımı yok.</div>`}</div><div class="notifySectionV7"><div class="notifyTitleV7">GÖNDERİLEN PAYLAŞIMLAR (${outgoing.length})</div>${outgoing.length?outgoing.map(x=>card(x,false)).join(""):`<div class="notifyEmptyV7">Aktif gönderilen dosya paylaşımı yok.</div>`}</div><div class="cloudStatusV9">Supabase merkezi paylaşım sistemi aktif • V14</div>`;body.querySelectorAll("[data-cloud-open-v9]").forEach(b=>b.onclick=()=>openSharedFile9(b.dataset.cloudOpenV9));if(mark)localStorage.setItem(SEEN9+":"+me.id,String(Date.now()));}
+window.renderCloudNotifications9=renderCloudNotifications9;
+window.refreshCloudShares9=refreshCloudShares9;
+
 async function updateCloudBadge9(){const b=$9("notifyBadgeV7"),me=await user9();if(!b||!me)return;await refreshCloudShares9();const seen=Number(localStorage.getItem(SEEN9+":"+me.id)||0),groups=groupShares9(cloudShares9.filter(x=>x.recipient_id===me.id&&Date.parse(x.created_at)>seen),r=>`${r.owner_id}|${r.created_at}|${r.expires_at}`);b.textContent=String(groups.length);b.style.display=groups.length?"block":"none"}
 function bindNotifications9(){window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;const btn=$9("faultSortBtnV6"),m=$9("notificationsModalV7");if(btn&&m)btn.onclick=async e=>{e.preventDefault();e.stopPropagation();if(m.style.display==="block"){m.style.display="none";return}m.style.display="block";const body=$9("notificationsBodyV7");if(body)body.innerHTML=`<div class="notifyEmptyV7">Paylaşımlar Supabase üzerinden kontrol ediliyor…</div>`;await renderCloudNotifications9(true);await updateCloudBadge9()}}
 
-async function boot9(){try{if(!sb9()&&typeof cloudInit==="function")cloudInit();if(!sb9())return;bindAdmin9();bindShare9();bindNotifications9();await bindAuth9();await syncProfilesLocal9();await refreshCloudShares9();await updateCloudBadge9();setInterval(()=>{updateCloudBadge9();if($9("notificationsModalV7")?.style.display==="block")renderCloudNotifications9(false)},15000)}catch(e){console.warn("ANALYZER V9 boot",e)}}
+let bootDone9=false,bootRetryTimer9=null;
+function loadScript9(src){
+ return new Promise((resolve,reject)=>{
+  if([...document.scripts].some(s=>s.src===src)){resolve();return}
+  const s=document.createElement("script");s.src=src;s.async=true;s.onload=resolve;s.onerror=()=>reject(new Error("Supabase bağlantı modülü yüklenemedi"));document.head.appendChild(s);
+ });
+}
+async function ensureSupabase9(){
+ if(sb9())return true;
+ if(!window.supabase){
+  const urls=[
+   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+   "https://unpkg.com/@supabase/supabase-js@2"
+  ];
+  for(const u of urls){try{await loadScript9(u);if(window.supabase)break}catch{}}
+ }
+ try{if(!sb9()&&typeof cloudInit==="function")cloudInit()}catch{}
+ return !!sb9();
+}
+function showCentralBootError9(message){
+ const body=$9("notificationsBodyV7");
+ if(body&&$9("notificationsModalV7")?.style.display==="block"){
+  body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Merkezi paylaşım bağlantısı kurulamadı.</b><br>${esc9(message||"Supabase bağlantısı hazırlanıyor…")}<br><small>ANALYZER V14 otomatik olarak tekrar deneyecek.</small></div>`;
+ }
+}
+async function boot9(){
+ window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;
+ /* Bind the central UI FIRST. Even if Supabase/CDN is temporarily unavailable,
+    the legacy localStorage notification screen can no longer take over. */
+ bindNotifications9();bindAdmin9();bindShare9();
+ if(bootDone9)return;
+ const ready=await ensureSupabase9();
+ if(!ready){
+  /* Never allow a stale/local-only session to masquerade as a valid cloud session. */
+  $9("authGate")?.classList.remove("off");
+  if($9("adminBtn"))$9("adminBtn").style.display="none";
+  showCentralBootError9("Supabase JavaScript bağlantısı henüz hazır değil.");
+  clearTimeout(bootRetryTimer9);bootRetryTimer9=setTimeout(boot9,1800);return;
+ }
+ try{
+  await bindAuth9();
+  await syncProfilesLocal9();
+  await refreshCloudShares9();
+  await updateCloudBadge9();
+  startPresence9();
+  bootDone9=true;
+  setInterval(async()=>{
+   try{
+    await updateCloudBadge9();
+    if($9("notificationsModalV7")?.style.display==="block")await renderCloudNotifications9(false);
+   }catch{}
+  },5000);
+ }catch(e){
+  console.warn("ANALYZER V14 central boot",e);
+  showCentralBootError9(e?.message||String(e));
+  clearTimeout(bootRetryTimer9);bootRetryTimer9=setTimeout(boot9,1800);
+ }
+}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(boot9,50));else setTimeout(boot9,50);
 })();
 </script>
@@ -2124,5 +2220,30 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 })();
 </script>
 <!-- ANALYZER V13: server-authoritative cross-device sharing; legacy local notification renderer disabled -->
+
+<script id="ANALYZER_V14_UPDATE_GUARD">
+(()=>{
+ const BUILD="V14.0-central-share";
+ let checking=false,lastCheck=0;
+ async function checkBuild(force=false){
+  const now=Date.now();if(checking||(!force&&now-lastCheck<15000))return;checking=true;lastCheck=now;
+  try{
+   const u=new URL(location.href);u.searchParams.set("__analyzer_build_check",String(now));
+   const html=await fetch(u.toString(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}}).then(r=>r.ok?r.text():Promise.reject(new Error("HTTP "+r.status)));
+   const m=html.match(/<meta\s+name=["']analyzer-build["']\s+content=["']([^"']+)["']/i);
+   const remote=m&&m[1];
+   if(remote&&remote!==BUILD){
+    const n=new URL(location.href);n.searchParams.set("v",remote);n.searchParams.set("_",String(Date.now()));
+    location.replace(n.toString());return;
+   }
+  }catch(e){console.warn("Build check",e)}
+  finally{checking=false}
+ }
+ window.addEventListener("pageshow",e=>{if(e.persisted){checkBuild(true)}else{setTimeout(()=>checkBuild(false),1200)}});
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkBuild(true)});
+ setInterval(()=>checkBuild(false),60000);
+})();
+</script>
+
 </body></html>
 
