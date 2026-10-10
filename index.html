@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ANALYZER</title>
-<!-- ANALYZER V11: mobile layout fix -->
+<!-- ANALYZER V12 FIXED: shared-file analysis + V11 mobile layout -->
 <style>
 :root{--d:#17232d;--r:#244b62;--a:#0aa58d;--line:#d8e1e6}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;height:100vh;overflow:hidden;background:#edf2f5;color:#17232d}
 header{height:116px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:14px 18px;position:relative}.brand{min-width:240px}.brand h1{margin:0;font-size:23px}.brand b{color:var(--a)}.brand small{color:#687782}
@@ -1905,7 +1905,7 @@ ensurePopupClose8();enforceBrand8();applyV8Language(localStorage.getItem("analyz
 .sharePresenceV9{font-size:10px;font-weight:900;white-space:nowrap}.sharePresenceV9.on{color:#0b8d52;background:none;box-shadow:none}.sharePresenceV9.off{color:#8b969c}
 .shareUserEmptyV9{padding:11px;color:#65747b;font-size:12px}
 #cloudShareHintV9{font-size:11px;color:#596970;margin-top:5px}
-.cloudNotifyOpenV9{border:0;border-radius:6px;padding:7px 9px;background:#17323e;color:#fff;font-weight:800;cursor:pointer;margin:4px 4px 0 0}
+.cloudNotifyOpenV9{border:0;border-radius:6px;padding:8px 10px;background:#17323e;color:#fff;font-weight:800;cursor:pointer;margin:4px 4px 0 0;white-space:normal;text-align:left;line-height:1.3}
 .cloudStatusV9{font-size:11px;color:#5f6d74;margin-top:5px}
 @media(max-width:760px){#adminPanel{width:calc(100vw - 12px)!important;max-height:78vh!important}#adminUsers .userrow{grid-template-columns:118px 1fr!important}}
 </style>
@@ -1974,7 +1974,75 @@ const baseHandle9=(typeof handle==="function")?handle:null;if(baseHandle9){windo
 
 let cloudShares9=[];
 async function refreshCloudShares9(){const sb=sb9(),me=await user9();if(!sb||!me)return[];const {data:rows,error}=await sb.from("file_shares").select("id,file_id,owner_id,recipient_id,expires_at,created_at").gt("expires_at",new Date().toISOString()).order("created_at",{ascending:false});if(error)return[];const ids=[...new Set((rows||[]).map(x=>x.file_id))],uids=[...new Set((rows||[]).flatMap(x=>[x.owner_id,x.recipient_id]))];let files=[],profiles=[];if(ids.length){const r=await sb.from("schematics").select("id,name,storage_path,owner_id").in("id",ids);files=r.data||[]}if(uids.length){const r=await sb.from("profiles").select("id,email,username").in("id",uids);profiles=r.data||[]}const fm=new Map(files.map(x=>[x.id,x])),pm=new Map(profiles.map(x=>[x.id,x]));cloudShares9=(rows||[]).map(r=>({...r,file:fm.get(r.file_id),owner:pm.get(r.owner_id),recipient:pm.get(r.recipient_id)}));return cloudShares9}
-async function openSharedFile9(id){const sb=sb9(),row=cloudShares9.find(x=>x.file_id===id);if(!sb||!row?.file)return;try{window.toast?.("Paylaşılan dosya açılıyor…");const {data,error}=await sb.storage.from("schematics").download(row.file.storage_path);if(error)throw error;const f=new File([data],row.file.name,{type:"application/pdf"});await handle([f],true);$9("notificationsModalV7").style.display="none"}catch(e){window.toast?.("Paylaşılan dosya açılamadı: "+(e?.message||e))}}
+async function openSharedFile9(id){
+ const sb=sb9(),me=await user9();
+ if(!sb||!me){window.toast?.("Supabase oturumu bulunamadı.");return}
+ const row=cloudShares9.find(x=>x.file_id===id&&x.recipient_id===me.id);
+ if(!row?.file){window.toast?.("Paylaşılan dosya bulunamadı veya paylaşım size ait değil.");return}
+ const expiresAt=Date.parse(row.expires_at||0);
+ if(!expiresAt||expiresAt<=Date.now()){
+  window.toast?.("Bu paylaşımın süresi sona ermiş.");
+  await refreshCloudShares9();
+  await renderCloudNotifications9(false);
+  return;
+ }
+ try{
+  window.toast?.("Paylaşılan dosya açılıyor ve analiz ediliyor…");
+  const {data,error}=await sb.storage.from("schematics").download(row.file.storage_path);
+  if(error)throw error;
+  const f=new File([data],row.file.name,{type:"application/pdf",lastModified:Date.now()});
+
+  /* Existing ANALYZER engine: PDF pages + text layer + circuit element/equipment analysis */
+  await handle([f],true);
+
+  /* If sender already created a deep scan, merge it into the receiver's live analysis. */
+  try{
+   const {data:scanRow,error:scanErr}=await sb.from("schematic_scans").select("scan_data").eq("file_id",id).maybeSingle();
+   if(scanErr&&scanErr.code!=="PGRST116")throw scanErr;
+   const scan=scanRow?.scan_data;
+   if(scan){
+    const merge=(target,packed)=>{
+     const incoming=typeof unpackMap==="function"?unpackMap(packed||[]):new Map();
+     for(const [k,v] of incoming){
+      if(!target.has(k)){target.set(k,v);continue}
+      const t=target.get(k);
+      if(v?.pages){
+       if(!(t.pages instanceof Set))t.pages=new Set(t.pages||[]);
+       for(const p of v.pages)t.pages.add(Number(p));
+      }
+      for(const key of ["name","ref","type","kind"]){if(!t[key]&&v?.[key])t[key]=v[key]}
+     }
+    };
+    if(!globalEmap)globalEmap=new Map();
+    if(!globalQmap)globalQmap=new Map();
+    merge(globalEmap,scan.elements||[]);
+    merge(globalQmap,scan.equipment||[]);
+    if(Array.isArray(scan.pages)){
+     for(let i=1;i<scan.pages.length;i++){
+      if(scan.pages[i])pageTexts[i]=((pageTexts[i]||"")+" "+String(scan.pages[i])).trim();
+     }
+    }
+    renderResults(globalEmap,globalQmap);
+   }
+  }catch(scanError){
+   console.warn("Shared scan could not be loaded; base PDF analysis remains active.",scanError);
+  }
+
+  /* Deep scan when no useful circuit elements were found by the base pass. */
+  if((!globalEmap||globalEmap.size===0)&&typeof scanWholeSchema==="function"){
+   if($9("status"))$9("status").textContent="Paylaşılan dosya için derin şema analizi yapılıyor…";
+   await scanWholeSchema();
+  }
+
+  if($9("status"))$9("status").textContent=`Paylaşılan dosya analize hazır • ${globalEmap?.size||0} devre elemanı • ${globalQmap?.size||0} ekipman`;
+  try{renderResults(globalEmap||new Map(),globalQmap||new Map())}catch{}
+  const nm=$9("notificationsModalV7");if(nm)nm.style.display="none";
+  window.toast?.("✓ Paylaşılan dosya açıldı; devre elemanları ve arıza motoru hazır.");
+ }catch(e){
+  console.error("Shared file open/analyze failed",e);
+  window.toast?.("Paylaşılan dosya açılamadı/analiz edilemedi: "+(e?.message||e));
+ }
+}
 function groupShares9(rows,keyFn){const m=new Map();for(const r of rows){const k=keyFn(r);let g=m.get(k);if(!g){g={...r,files:[]};m.set(k,g)}if(r.file)g.files.push(r.file)}return [...m.values()]}
 async function renderCloudNotifications9(mark=false){const body=$9("notificationsBodyV7");if(!body)return;await refreshCloudShares9();const me=await user9();if(!me)return;const incoming=groupShares9(cloudShares9.filter(x=>x.recipient_id===me.id),r=>`${r.owner_id}|${r.created_at}|${r.expires_at}`),outgoing=groupShares9(cloudShares9.filter(x=>x.owner_id===me.id),r=>`${r.recipient_id}|${r.created_at}|${r.expires_at}`);const card=(g,inc)=>{const who=inc?(g.owner?.username||g.owner?.email||"Kullanıcı"):(g.recipient?.username||g.recipient?.email||"Kullanıcı"),remain=Date.parse(g.expires_at)-Date.now();return `<div class="notifyCardV7 ${inc?"incoming":""}"><div class="notifyWhoV7">${inc?"📥":"📤"} ${esc9(who)}</div><div>${g.files.length} dosya</div><div class="notifyFilesV7">${g.files.map(f=>inc?`<button class="cloudNotifyOpenV9" data-cloud-open-v9="${esc9(f.id)}">📄 ${esc9(f.name)}</button>`:`<div>• ${esc9(f.name)}</div>`).join("")||"Dosya bilgisi yok."}</div>Kalan süre: <span class="notifyTimerV7">${fmtRemain9(remain)}</span></div>`};body.innerHTML=`<div class="notifySectionV7"><div class="notifyTitleV7">GELEN PAYLAŞIMLAR (${incoming.length})</div>${incoming.length?incoming.map(x=>card(x,true)).join(""):`<div class="notifyEmptyV7">Aktif gelen dosya paylaşımı yok.</div>`}</div><div class="notifySectionV7"><div class="notifyTitleV7">GÖNDERİLEN PAYLAŞIMLAR (${outgoing.length})</div>${outgoing.length?outgoing.map(x=>card(x,false)).join(""):`<div class="notifyEmptyV7">Aktif gönderilen dosya paylaşımı yok.</div>`}</div><div class="cloudStatusV9">Supabase merkezi paylaşım sistemi aktif.</div>`;body.querySelectorAll("[data-cloud-open-v9]").forEach(b=>b.onclick=()=>openSharedFile9(b.dataset.cloudOpenV9));if(mark)localStorage.setItem(SEEN9+":"+me.id,String(Date.now()));}
 async function updateCloudBadge9(){const b=$9("notifyBadgeV7"),me=await user9();if(!b||!me)return;await refreshCloudShares9();const seen=Number(localStorage.getItem(SEEN9+":"+me.id)||0),groups=groupShares9(cloudShares9.filter(x=>x.recipient_id===me.id&&Date.parse(x.created_at)>seen),r=>`${r.owner_id}|${r.created_at}|${r.expires_at}`);b.textContent=String(groups.length);b.style.display=groups.length?"block":"none"}
