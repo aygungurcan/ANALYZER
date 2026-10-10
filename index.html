@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ANALYZER</title>
-<meta name="analyzer-build" content="V14.0-central-share">
+<meta name="analyzer-build" content="V15.0-stable-share-auth">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-window.ANALYZER_VERSION="V14.0-central-share";
+window.ANALYZER_VERSION="V15.0-stable-share-auth";
 window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;
 </script>
 <!-- ANALYZER V14: permanent central sharing + shared-file analysis + mobile layout -->
@@ -1029,7 +1029,7 @@ document.addEventListener("click",e=>{if(!$a("userPop").contains(e.target)&&!e.t
 const ss=session();if(ss){$a("authGate").classList.add("off");if(ss.mail===CENTER){$a("adminBtn").style.display="block";renderAdmin()}}
 })();
 </script>
-<script>window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;window.ANALYZER_VERSION="V14.0-central-share";</script>
+<script>window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;window.ANALYZER_VERSION="V15.0-stable-share-auth";</script>
 <script id="ANALYZER_CLOUD_V4">
 const ANALYZER_SUPABASE={
  enabled:true,
@@ -1052,7 +1052,7 @@ async function cloudUsernameAvailable(username){
 }
 async function cloudRegister(email,password,username){
  if(!ANALYZER_SB)return null;
- const {data,error}=await ANALYZER_SB.auth.signUp({email,password,options:{data:{username}}});
+ const {data,error}=await ANALYZER_SB.auth.signUp({email,password,options:{data:{username},emailRedirectTo:location.origin+"/?email_confirmed=1"}});
  if(error)throw error; return data;
 }
 async function cloudLogin(email,password){
@@ -1394,7 +1394,7 @@ function registeredMatchV(name){const n=String(name||"").trim().toLocaleLowerCas
 function validateShareUserV(){const u=registeredMatchV($v("shareUserNameV5")?.value),tick=$v("shareUserTickV5"),state=$v("shareUserStateV5");if(!tick)return null;if(u){tick.textContent="✓";tick.className="shareUserTick ok";state.textContent="Kayıtlı kullanıcı bulundu.";state.className="nameState nameOK"}else{tick.textContent=$v("shareUserNameV5")?.value?"×":"";tick.className="shareUserTick no";state.textContent=$v("shareUserNameV5")?.value?"Kayıtlı kullanıcı bulunamadı.":"";state.className="nameState nameNO"}return u}
 function updateShareSelectedInfoV(){const box=$v("shareSelectedInfoV5");if(!box)return;const mode=document.querySelector('input[name="shareModeV5"]:checked')?.value||"selected",owned=currentOwnerFilesV(),picks=sharePicksV(),files=mode==="all"?owned:owned.filter(f=>picks.has(f.name));box.innerHTML=`<b>${mode==="all"?"Tüm dosyalar":"Seçili dosyalar"} (${files.length})</b><br>${files.length?files.map(f=>"• "+escV(f.name)).join("<br>"):"Dosya seçilmedi."}`}
 function latestActiveShareV(){const me=currentMailV();return activeSharesV().filter(s=>s.fromMail===me).sort((a,b)=>b.startedAt-a.startedAt)[0]||null}
-function renderActiveSharesV(){const root=$v("shareActiveListV5");if(!root)return;const me=currentMailV(),rows=activeSharesV().filter(s=>s.fromMail===me).sort((a,b)=>b.startedAt-a.startedAt);root.innerHTML=rows.length?rows.map(s=>`<div class="shareActiveCard"><b>${escV(s.toName||s.toMail)}</b><br>${(s.fileNames||[]).map(escV).join(", ")}<br>Kalan: <b data-share-exp="${Number(s.expiresAt)}">${fmtRemainV(Number(s.expiresAt)-nowV())}</b></div>`).join(""):"<div class='count'>Aktif paylaşım yok.</div>"}
+function renderActiveSharesV(){const root=$v("shareActiveListV5");if(!root)return;const me=currentMailV(),rows=activeSharesV().filter(s=>s.fromMail===me).sort((a,b)=>b.startedAt-a.startedAt);root.innerHTML=rows.length?rows.map(s=>`<div class="shareActiveCard"><b>${escV(s.toName||s.toMail)}</b><br>${(s.fileNames||[]).map(escV).join(", ")}<br>Kalan: <b data-share-exp="${Number(s.expiresAt)}">${fmtRemainV(Number(s.expiresAt)-nowV())}</b><br><button class="endShareBtnV15" data-local-share-v15="${escV(s.id||"")}">PAYLAŞMAYI SONLANDIR</button></div>`).join(""):"<div class='count'>Aktif paylaşım yok.</div>";root.querySelectorAll("[data-local-share-v15]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();window.requestEndLocalShare15?.(b.dataset.localShareV15)})}
 function restoreSharePopupStateV(){const dl=$v("shareUsersV5");if(dl)dl.innerHTML=accountsV().filter(u=>u.mail!==currentMailV()).map(u=>`<option value="${escV(u.name)}"></option>`).join("");const s=latestActiveShareV();if(s){$v("shareUserNameV5").value=s.toName||"";$v("shareDurationV5").value=String(s.durationMs||3600000);const r=document.querySelector(`input[name="shareModeV5"][value="${s.mode||"selected"}"]`);if(r)r.checked=true}validateShareUserV();updateShareSelectedInfoV();renderActiveSharesV();updateCountdownV()}
 function openSharePopupV(){const m=$v("shareModalV5");m.style.display="block";if(!m.dataset.positioned){m.style.left="50%";m.style.top="18%";m.style.transform="translateX(-50%)";m.dataset.positioned="1"}restoreSharePopupStateV()}
 function closeSharePopupV(){$v("shareModalV5").style.display="none"}
@@ -1968,19 +1968,49 @@ async function resolveEmail9(identity){identity=String(identity||"").trim();if(i
  const low=identity.toLocaleLowerCase("tr-TR"),u=read9(AKEY9,[]).find(x=>String(x.name||"").toLocaleLowerCase("tr-TR")===low);return u?.mail||""}
 async function afterCloudLogin9(user,{countLogin=true}={}){if(!user)return;const sb=sb9();if(countLogin){try{await sb.rpc("record_login")}catch{}}try{await sb.rpc("heartbeat",{is_online:true})}catch{}const p=await profile9(user.id)||{id:user.id,email:user.email,username:user.user_metadata?.username||user.email?.split("@")[0]};setLocalSession9(p);await syncProfilesLocal9();startPresence9();if(String(p.email).toLowerCase()===CENTER9)renderAdminCloud9();}
 
+async function finishEmailConfirmation9(session){
+ const sb=sb9(),u=session?.user||null;
+ const url=new URL(location.href),confirmed=url.searchParams.get("email_confirmed")==="1";
+ const hash=new URLSearchParams((location.hash||"").replace(/^#/,""));
+ const authErr=hash.get("error_description")||url.searchParams.get("error_description")||"";
+ if(!confirmed&&!authErr)return false;
+ const mail=u?.email||localStorage.getItem("analyzer_pending_confirm_email_v15")||"";
+ try{if(session)await sb.auth.signOut({scope:"local"})}catch{}
+ sessionStorage.removeItem(SKEY9);
+ $9("authGate")?.classList.remove("off");
+ if(typeof setAuthMode8==="function")setAuthMode8("login");
+ if($9("loginMail")&&mail)$9("loginMail").value=mail;
+ const msg=$9("loginErr");
+ if(msg){
+  if(authErr){msg.style.color="#b42318";msg.textContent="E-posta doğrulaması tamamlanamadı: "+decodeURIComponent(authErr.replace(/\+/g," "))}
+  else{msg.style.color="#176b45";msg.textContent="✓ E-posta adresiniz doğrulandı. Parolanızla giriş yapabilirsiniz. | Email verified. You can now sign in."}
+ }
+ localStorage.removeItem("analyzer_pending_confirm_email_v15");
+ url.searchParams.delete("email_confirmed");url.searchParams.delete("error");url.searchParams.delete("error_code");url.searchParams.delete("error_description");
+ history.replaceState(null,"",url.pathname+(url.searchParams.toString()?"?"+url.searchParams.toString():""));
+ return true;
+}
+
 async function bindAuth9(){const sb=sb9();if(!sb)return;
  const reg=$9("registerBtn"),login=$9("loginBtn");
  if(reg)reg.onclick=async()=>{const mail=$9("regMail").value.trim().toLowerCase(),name=$9("regUser").value.trim(),p1=$9("regPass1").value,p2=$9("regPass2").value,e=$9("regErr");e.textContent="";
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){e.textContent="Geçerli bir e-posta adresi girin. | Enter a valid email address.";return}if(name.length<3){e.textContent="Kullanıcı adı en az 3 karakter olmalı. | Username must be at least 3 characters.";return}if(p1!==p2){e.textContent="Parolalar aynı değil. | Passwords do not match.";return}if(!validPass9(p1)){e.textContent="Parola en az 8 karakter, büyük/küçük harf ve rakam içermeli. | Password must contain 8+ characters, upper/lowercase and a number.";return}
-  try{const ok=await cloudUsernameAvailable(name);if(!ok){e.textContent="Bu kullanıcı adı kullanılıyor. | This username is already in use.";return}const {data,error}=await sb.auth.signUp({email:mail,password:p1,options:{data:{username:name}}});if(error)throw error;let a=read9(AKEY9,[]);if(!a.some(x=>String(x.mail).toLowerCase()===mail))a.push({mail,name,pass:await hash9(p1),created:Date.now(),loginCount:0,totalMs:0,files:0,online:false,lastSeen:0});write9(AKEY9,a);if(data.session&&data.user){await afterCloudLogin9(data.user,{countLogin:true})}else{e.style.color="#176b45";e.textContent="Hesap oluşturuldu. E-posta doğrulaması açıksa gelen kutunuzu kontrol edin, sonra Giriş Yap seçeneğini kullanın. | Account created. If email confirmation is enabled, check your inbox, then sign in."}}
+  try{const ok=await cloudUsernameAvailable(name);if(!ok){e.textContent="Bu kullanıcı adı kullanılıyor. | This username is already in use.";return}localStorage.setItem("analyzer_pending_confirm_email_v15",mail);const {data,error}=await sb.auth.signUp({email:mail,password:p1,options:{data:{username:name},emailRedirectTo:location.origin+"/?email_confirmed=1"}});if(error)throw error;let a=read9(AKEY9,[]);if(!a.some(x=>String(x.mail).toLowerCase()===mail))a.push({mail,name,pass:await hash9(p1),created:Date.now(),loginCount:0,totalMs:0,files:0,online:false,lastSeen:0});write9(AKEY9,a);if(data.session&&data.user){await afterCloudLogin9(data.user,{countLogin:true})}else{e.style.color="#176b45";e.textContent="Hesap oluşturuldu. E-posta doğrulaması açıksa gelen kutunuzu kontrol edin, sonra Giriş Yap seçeneğini kullanın. | Account created. If email confirmation is enabled, check your inbox, then sign in."}}
   catch(err){e.style.color="#b42318";e.textContent=(err?.message||"Kayıt oluşturulamadı.")}}
  if(login)login.onclick=async()=>{const identity=$9("loginMail").value.trim(),pass=$9("loginPass").value,e=$9("loginErr");e.style.color="#b42318";e.textContent="";if(!identity||!pass){e.textContent="Kullanıcı adı/e-posta ve parola girin. | Enter username/email and password.";return}
   try{let email=await resolveEmail9(identity);if(!email)throw Error("Kullanıcı bulunamadı. | User not found.");let {data,error}=await sb.auth.signInWithPassword({email,password:pass});
-   if(error){const low=identity.toLocaleLowerCase("tr-TR"),loc=read9(AKEY9,[]).find(x=>String(x.mail||"").toLocaleLowerCase("tr-TR")===String(email).toLocaleLowerCase("tr-TR")||String(x.name||"").toLocaleLowerCase("tr-TR")===low);if(loc&&loc.pass&&loc.pass===await hash9(pass)){const r=await sb.auth.signUp({email:loc.mail,password:pass,options:{data:{username:loc.name}}});if(r.error)throw error;if(!r.data.session){e.style.color="#176b45";e.textContent="Hesabınız merkezi sisteme taşındı. E-posta doğrulaması gerekiyorsa doğrulayıp tekrar giriş yapın. | Account migrated. Confirm email if required, then sign in.";return}data=r.data;error=null}else throw error}
+   if(error){const low=identity.toLocaleLowerCase("tr-TR"),loc=read9(AKEY9,[]).find(x=>String(x.mail||"").toLocaleLowerCase("tr-TR")===String(email).toLocaleLowerCase("tr-TR")||String(x.name||"").toLocaleLowerCase("tr-TR")===low);if(loc&&loc.pass&&loc.pass===await hash9(pass)){const r=await sb.auth.signUp({email:loc.mail,password:pass,options:{data:{username:loc.name},emailRedirectTo:location.origin+"/?email_confirmed=1"}});if(r.error)throw error;if(!r.data.session){e.style.color="#176b45";e.textContent="Hesabınız merkezi sisteme taşındı. E-posta doğrulaması gerekiyorsa doğrulayıp tekrar giriş yapın. | Account migrated. Confirm email if required, then sign in.";return}data=r.data;error=null}else throw error}
    await afterCloudLogin9(data.user,{countLogin:true})
   }catch(err){e.textContent=err?.message||"Kullanıcı adı/e-posta veya parola hatalı. | Username/email or password is incorrect."}}
- const {data:{session}}=await sb.auth.getSession();if(session?.user)await afterCloudLogin9(session.user,{countLogin:false});else{$9("authGate")?.classList.remove("off");if($9("adminBtn"))$9("adminBtn").style.display="none"}
- sb.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){$9("authGate")?.classList.remove("off");sessionStorage.removeItem(SKEY9)}else if(session?.user)setTimeout(()=>afterCloudLogin9(session.user,{countLogin:false}),0)});
+ const {data:{session}}=await sb.auth.getSession();
+ if(!(await finishEmailConfirmation9(session))){
+  if(session?.user)await afterCloudLogin9(session.user,{countLogin:false});
+  else{$9("authGate")?.classList.remove("off");if($9("adminBtn"))$9("adminBtn").style.display="none"}
+ }
+ sb.auth.onAuthStateChange((event,session)=>{
+  if(event==="SIGNED_OUT"){$9("authGate")?.classList.remove("off");sessionStorage.removeItem(SKEY9)}
+  else if(session?.user)setTimeout(async()=>{if(!(await finishEmailConfirmation9(session)))await afterCloudLogin9(session.user,{countLogin:false})},0)
+ });
 }
 
 let presenceTimer9=null;
@@ -2056,28 +2086,43 @@ async function refreshCloudShares9(){
   }
  }
 }
+async function downloadCloudPdf9(path,name){
+ const sb=sb9();if(!sb)throw Error("Supabase bağlantısı yok.");
+ let firstErr=null;
+ try{
+  const {data,error}=await sb.storage.from("schematics").download(path);
+  if(error)throw error;
+  if(data)return new File([data],name,{type:"application/pdf",lastModified:Date.now()});
+ }catch(e){firstErr=e;console.warn("Direct storage download failed",e)}
+ try{
+  const {data,error}=await sb.storage.from("schematics").createSignedUrl(path,90);
+  if(error)throw error;
+  const r=await fetch(data.signedUrl,{cache:"no-store"});
+  if(!r.ok)throw Error("HTTP "+r.status);
+  const blob=await r.blob();
+  return new File([blob],name,{type:"application/pdf",lastModified:Date.now()});
+ }catch(e){
+  console.error("Signed storage download failed",e);
+  throw Error("Dosyaya erişilemedi. "+(e?.message||firstErr?.message||"Storage erişimi reddedildi."));
+ }
+}
 async function openSharedFile9(id){
  const sb=sb9(),me=await user9();
  if(!sb||!me){window.toast?.("Supabase oturumu bulunamadı.");return}
+ await refreshCloudShares9();
  const row=cloudShares9.find(x=>x.file_id===id&&x.recipient_id===me.id);
  if(!row?.file){window.toast?.("Paylaşılan dosya bulunamadı veya paylaşım size ait değil.");return}
  const expiresAt=Date.parse(row.expires_at||0);
  if(!expiresAt||expiresAt<=Date.now()){
   window.toast?.("Bu paylaşımın süresi sona ermiş.");
-  await refreshCloudShares9();
-  await renderCloudNotifications9(false);
-  return;
+  await refreshCloudShares9();await renderCloudNotifications9(false);return;
  }
  try{
   window.toast?.("Paylaşılan dosya açılıyor ve analiz ediliyor…");
-  const {data,error}=await sb.storage.from("schematics").download(row.file.storage_path);
-  if(error)throw error;
-  const f=new File([data],row.file.name,{type:"application/pdf",lastModified:Date.now()});
-
-  /* Existing ANALYZER engine: PDF pages + text layer + circuit element/equipment analysis */
+  const f=await downloadCloudPdf9(row.file.storage_path,row.file.name);
+  try{await storeLibraryFile(f)}catch{}
   await handle([f],true);
 
-  /* If sender already created a deep scan, merge it into the receiver's live analysis. */
   try{
    const {data:scanRow,error:scanErr}=await sb.from("schematic_scans").select("scan_data").eq("file_id",id).maybeSingle();
    if(scanErr&&scanErr.code!=="PGRST116")throw scanErr;
@@ -2088,45 +2133,95 @@ async function openSharedFile9(id){
      for(const [k,v] of incoming){
       if(!target.has(k)){target.set(k,v);continue}
       const t=target.get(k);
-      if(v?.pages){
-       if(!(t.pages instanceof Set))t.pages=new Set(t.pages||[]);
-       for(const p of v.pages)t.pages.add(Number(p));
-      }
+      if(v?.pages){if(!(t.pages instanceof Set))t.pages=new Set(t.pages||[]);for(const p of v.pages)t.pages.add(Number(p))}
       for(const key of ["name","ref","type","kind"]){if(!t[key]&&v?.[key])t[key]=v[key]}
      }
     };
-    if(!globalEmap)globalEmap=new Map();
-    if(!globalQmap)globalQmap=new Map();
-    merge(globalEmap,scan.elements||[]);
-    merge(globalQmap,scan.equipment||[]);
-    if(Array.isArray(scan.pages)){
-     for(let i=1;i<scan.pages.length;i++){
-      if(scan.pages[i])pageTexts[i]=((pageTexts[i]||"")+" "+String(scan.pages[i])).trim();
-     }
-    }
+    if(!globalEmap)globalEmap=new Map();if(!globalQmap)globalQmap=new Map();
+    merge(globalEmap,scan.elements||[]);merge(globalQmap,scan.equipment||[]);
+    if(Array.isArray(scan.pages)){for(let i=1;i<scan.pages.length;i++){if(scan.pages[i])pageTexts[i]=((pageTexts[i]||"")+" "+String(scan.pages[i])).trim()}}
     renderResults(globalEmap,globalQmap);
    }
-  }catch(scanError){
-   console.warn("Shared scan could not be loaded; base PDF analysis remains active.",scanError);
-  }
+  }catch(scanError){console.warn("Shared scan could not be loaded; base PDF analysis remains active.",scanError)}
 
-  /* Deep scan when no useful circuit elements were found by the base pass. */
   if((!globalEmap||globalEmap.size===0)&&typeof scanWholeSchema==="function"){
    if($9("status"))$9("status").textContent="Paylaşılan dosya için derin şema analizi yapılıyor…";
    await scanWholeSchema();
   }
-
   if($9("status"))$9("status").textContent=`Paylaşılan dosya analize hazır • ${globalEmap?.size||0} devre elemanı • ${globalQmap?.size||0} ekipman`;
   try{renderResults(globalEmap||new Map(),globalQmap||new Map())}catch{}
   const nm=$9("notificationsModalV7");if(nm)nm.style.display="none";
-  window.toast?.("✓ Paylaşılan dosya açıldı; devre elemanları ve arıza motoru hazır.");
+  window.toast?.("✓ Paylaşılan dosya açıldı; analiz ve arıza motoru hazır.");
  }catch(e){
   console.error("Shared file open/analyze failed",e);
-  window.toast?.("Paylaşılan dosya açılamadı/analiz edilemedi: "+(e?.message||e));
+  window.toast?.("Paylaşılan dosya açılamadı: "+(e?.message||e));
  }
 }
+
 function groupShares9(rows,keyFn){const m=new Map();for(const r of rows){const k=keyFn(r);let g=m.get(k);if(!g){g={...r,files:[]};m.set(k,g)}if(r.file)g.files.push(r.file)}return [...m.values()]}
-async function renderCloudNotifications9(mark=false){const body=$9("notificationsBodyV7");if(!body)return;window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;await refreshCloudShares9();const me=await user9();if(!me){body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Merkezi oturum bulunamadı.</b><br>Çıkış yapıp Supabase hesabınızla yeniden giriş yapın.</div>`;return}if(cloudShareError9){body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Paylaşım sunucusuna erişilemedi.</b><br>${esc9(cloudShareError9)}</div>`;return}const incoming=groupShares9(cloudShares9.filter(x=>x.recipient_id===me.id),r=>`${r.owner_id}|${r.created_at}|${r.expires_at}`),outgoing=groupShares9(cloudShares9.filter(x=>x.owner_id===me.id),r=>`${r.recipient_id}|${r.created_at}|${r.expires_at}`);const card=(g,inc)=>{const who=inc?(g.owner?.username||g.owner?.email||"Kullanıcı"):(g.recipient?.username||g.recipient?.email||"Kullanıcı"),remain=Date.parse(g.expires_at)-Date.now();return `<div class="notifyCardV7 ${inc?"incoming":""}"><div class="notifyWhoV7">${inc?"📥":"📤"} ${esc9(who)}</div><div>${g.files.length} dosya</div><div class="notifyFilesV7">${g.files.map(f=>inc?`<button class="cloudNotifyOpenV9" data-cloud-open-v9="${esc9(f.id)}">📄 ${esc9(f.name)}</button>`:`<div>• ${esc9(f.name)}</div>`).join("")||"Dosya bilgisi yok."}</div>Kalan süre: <span class="notifyTimerV7">${fmtRemain9(remain)}</span></div>`};body.innerHTML=`<div class="notifySectionV7"><div class="notifyTitleV7">GELEN PAYLAŞIMLAR (${incoming.length})</div>${incoming.length?incoming.map(x=>card(x,true)).join(""):`<div class="notifyEmptyV7">Aktif gelen dosya paylaşımı yok.</div>`}</div><div class="notifySectionV7"><div class="notifyTitleV7">GÖNDERİLEN PAYLAŞIMLAR (${outgoing.length})</div>${outgoing.length?outgoing.map(x=>card(x,false)).join(""):`<div class="notifyEmptyV7">Aktif gönderilen dosya paylaşımı yok.</div>`}</div><div class="cloudStatusV9">Supabase merkezi paylaşım sistemi aktif • V14</div>`;body.querySelectorAll("[data-cloud-open-v9]").forEach(b=>b.onclick=()=>openSharedFile9(b.dataset.cloudOpenV9));if(mark)localStorage.setItem(SEEN9+":"+me.id,String(Date.now()));}
+function groupShares15(rows,keyFn){
+ const m=new Map();
+ for(const r of rows){
+  const k=keyFn(r);let g=m.get(k);
+  if(!g){g={...r,files:[],shareIds:[]};m.set(k,g)}
+  if(r.file)g.files.push(r.file);
+  if(r.id)g.shareIds.push(r.id);
+ }
+ return [...m.values()];
+}
+async function endShareIds15(ids){
+ const sb=sb9(),me=await user9();if(!sb||!me)throw Error("Supabase oturumu yok.");
+ const clean=[...new Set((ids||[]).filter(Boolean))];if(!clean.length)throw Error("Sonlandırılacak paylaşım bulunamadı.");
+ let ok=false;
+ try{
+  const {data,error}=await sb.rpc("end_file_shares",{share_ids:clean});
+  if(error)throw error;ok=true;
+ }catch(rpcErr){
+  const {error}=await sb.from("file_shares").delete().in("id",clean).eq("owner_id",me.id);
+  if(error)throw error;ok=true;
+ }
+ if(ok){
+  let local=read9(SHAREKEY9,[]);
+  local=local.map(s=>{const overlap=(s.fileIds||[]).some(fid=>cloudShares9.some(r=>clean.includes(r.id)&&r.file_id===fid));return overlap?{...s,ended:true,endedAt:Date.now()}:s});
+  write9(SHAREKEY9,local);
+ }
+ return ok;
+}
+function ensureEndShareConfirm15(){
+ let m=$9("endShareConfirmV15");if(m)return m;
+ document.body.insertAdjacentHTML("beforeend",`<div id="endShareConfirmV15"><button class="popupCloseV15" id="endShareCloseV15" type="button">×</button><div id="endShareTextV15"></div><div class="confirmBtnsV15"><button class="confirmCancelV15" id="endShareCancelV15">İptal</button><button class="confirmDangerV15" id="endShareYesV15">PAYLAŞMAYI SONLANDIR</button></div></div>`);
+ m=$9("endShareConfirmV15");$9("endShareCloseV15").onclick=$9("endShareCancelV15").onclick=()=>m.style.display="none";return m;
+}
+function askEndShare15(group){
+ const m=ensureEndShareConfirm15(),who=group?.recipient?.username||group?.recipient?.email||"kullanıcı",names=(group?.files||[]).map(x=>x.name).join(", ");
+ $9("endShareTextV15").innerHTML=`<b>${esc9(who)}</b> ile yapılan paylaşım süre dolmadan sonlandırılacak.<br><br>${esc9(names||"Paylaşılan dosya")}<br><br><b>Bu işlem alıcının erişimini hemen kapatır.</b>`;
+ m.style.display="block";
+ $9("endShareYesV15").onclick=async()=>{
+  const b=$9("endShareYesV15");b.disabled=true;b.textContent="SONLANDIRILIYOR…";
+  try{await endShareIds15(group.shareIds||[]);m.style.display="none";await refreshCloudShares9();await renderCloudNotifications9(false);window.toast?.("✓ Dosya paylaşımı sonlandırıldı.")}
+  catch(e){window.toast?.("Paylaşım sonlandırılamadı: "+(e?.message||e))}
+  finally{b.disabled=false;b.textContent="PAYLAŞMAYI SONLANDIR"}
+ };
+}
+window.askEndShare15=askEndShare15;
+
+async function renderCloudNotifications9(mark=false){
+ const body=$9("notificationsBodyV7");if(!body)return;window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;
+ await refreshCloudShares9();const me=await user9();
+ if(!me){body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Merkezi oturum bulunamadı.</b><br>Çıkış yapıp Supabase hesabınızla yeniden giriş yapın.</div>`;return}
+ if(cloudShareError9){body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Paylaşım sunucusuna erişilemedi.</b><br>${esc9(cloudShareError9)}</div>`;return}
+ const incoming=groupShares15(cloudShares9.filter(x=>x.recipient_id===me.id),r=>`${r.owner_id}|${r.created_at}|${r.expires_at}`);
+ const outgoing=groupShares15(cloudShares9.filter(x=>x.owner_id===me.id),r=>`${r.recipient_id}|${r.created_at}|${r.expires_at}`);
+ const card=(g,inc,idx)=>{
+  const who=inc?(g.owner?.username||g.owner?.email||"Kullanıcı"):(g.recipient?.username||g.recipient?.email||"Kullanıcı"),remain=Date.parse(g.expires_at)-Date.now();
+  return `<div class="notifyCardV7 ${inc?"incoming":""}"><div class="notifyWhoV7">${inc?"📥":"📤"} ${esc9(who)}</div><div>${g.files.length} dosya</div><div class="notifyFilesV7">${g.files.map(f=>inc?`<button class="cloudNotifyOpenV9" data-cloud-open-v9="${esc9(f.id)}">📄 ${esc9(f.name)}</button>`:`<div>• ${esc9(f.name)}</div>`).join("")||"Dosya bilgisi yok."}</div>Kalan süre: <span class="notifyTimerV7">${fmtRemain9(remain)}</span>${inc?"":`<div><button class="endShareBtnV15" data-end-share-v15="${idx}">PAYLAŞMAYI SONLANDIR</button></div>`}</div>`
+ };
+ body.innerHTML=`<div class="notifySectionV7"><div class="notifyTitleV7">GELEN PAYLAŞIMLAR (${incoming.length})</div>${incoming.length?incoming.map((x,i)=>card(x,true,i)).join(""):`<div class="notifyEmptyV7">Aktif gelen dosya paylaşımı yok.</div>`}</div><div class="notifySectionV7"><div class="notifyTitleV7">GÖNDERİLEN PAYLAŞIMLAR (${outgoing.length})</div>${outgoing.length?outgoing.map((x,i)=>card(x,false,i)).join(""):`<div class="notifyEmptyV7">Aktif gönderilen dosya paylaşımı yok.</div>`}</div><div class="cloudStatusV9">Supabase merkezi paylaşım sistemi aktif • V15</div>`;
+ body.querySelectorAll("[data-cloud-open-v9]").forEach(b=>b.onclick=()=>openSharedFile9(b.dataset.cloudOpenV9));
+ body.querySelectorAll("[data-end-share-v15]").forEach(b=>b.onclick=()=>askEndShare15(outgoing[Number(b.dataset.endShareV15)]));
+ if(mark)localStorage.setItem(SEEN9+":"+me.id,String(Date.now()));
+}
+
 window.renderCloudNotifications9=renderCloudNotifications9;
 window.refreshCloudShares9=refreshCloudShares9;
 
@@ -2155,7 +2250,7 @@ async function ensureSupabase9(){
 function showCentralBootError9(message){
  const body=$9("notificationsBodyV7");
  if(body&&$9("notificationsModalV7")?.style.display==="block"){
-  body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Merkezi paylaşım bağlantısı kurulamadı.</b><br>${esc9(message||"Supabase bağlantısı hazırlanıyor…")}<br><small>ANALYZER V14 otomatik olarak tekrar deneyecek.</small></div>`;
+  body.innerHTML=`<div class="notifyEmptyV7" style="color:#b42318"><b>Merkezi paylaşım bağlantısı kurulamadı.</b><br>${esc9(message||"Supabase bağlantısı hazırlanıyor…")}<br><small>ANALYZER V15 otomatik olarak tekrar deneyecek.</small></div>`;
  }
 }
 async function boot9(){
@@ -2186,7 +2281,7 @@ async function boot9(){
    }catch{}
   },5000);
  }catch(e){
-  console.warn("ANALYZER V14 central boot",e);
+  console.warn("ANALYZER V15 central boot",e);
   showCentralBootError9(e?.message||String(e));
   clearTimeout(bootRetryTimer9);bootRetryTimer9=setTimeout(boot9,1800);
  }
@@ -2219,11 +2314,212 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   setTimeout(fit,60);
 })();
 </script>
-<!-- ANALYZER V13: server-authoritative cross-device sharing; legacy local notification renderer disabled -->
+<!-- ANALYZER V15: server-authoritative sharing, cloud library, two-stage delete, early share termination, verified-email redirect -->
+
+
+<style id="ANALYZER_V15_STABLE_STYLE">
+/* V15: modal centering, safe confirmations, robust sharing controls */
+#deleteConfirmV5,#deleteFinalV15,#endShareConfirmV15{
+ position:fixed!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;
+ transform:translate(-50%,-50%)!important;margin:0!important;
+ width:min(520px,calc(100vw - 24px))!important;max-height:min(78dvh,640px)!important;overflow:auto!important;
+ z-index:2147483000!important;box-sizing:border-box!important;
+}
+#deleteConfirmV5,#deleteFinalV15{background:#fff3bf!important;color:#111!important;border:4px solid #d82c2c!important;border-radius:14px!important;box-shadow:0 24px 80px #0007!important;padding:18px!important}
+#deleteFinalV15,#endShareConfirmV15{display:none}
+#endShareConfirmV15{background:#fff8d8;color:#111;border:4px solid #e0b400;border-radius:14px;box-shadow:0 24px 80px #0007;padding:18px}
+.popupCloseV15{position:absolute;right:12px;top:12px;width:44px;height:44px;border:0;border-radius:9px;background:#17323e;color:#fff;font-size:26px;font-weight:900;cursor:pointer}
+.confirmBtnsV15{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.confirmBtnsV15 button{border:0;border-radius:9px;padding:11px 14px;font-weight:900;cursor:pointer}
+.confirmCancelV15{background:#e6ecef;color:#111}.confirmDangerV15{background:#c92d2d;color:#fff}
+.endShareBtnV15{margin-top:9px;border:2px solid #c92d2d;background:#fff;color:#b42318;border-radius:8px;padding:8px 10px;font-weight:900;cursor:pointer}
+.endShareBtnV15:hover{background:#fff0f0}
+.cloudSyncBadgeV15{font-size:10px;color:#52727c;margin-top:4px}
+@media(max-width:760px){
+ #deleteConfirmV5,#deleteFinalV15,#endShareConfirmV15{width:calc(100vw - 18px)!important;max-height:72dvh!important;padding:16px!important}
+ .confirmBtnsV15{display:grid;grid-template-columns:1fr 1fr}
+ .confirmBtnsV15 button{width:100%}
+}
+</style>
+
+<script id="ANALYZER_V15_STABLE_PATCH">
+(()=>{
+"use strict";
+const $15=id=>document.getElementById(id);
+const AHELIB15="aheLib", PICK15="analyzer_share_selected_v1", LOCALSHARE15="analyzer_shares_v2";
+const esc15=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const read15=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch{return d}};
+const write15=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const session15=()=>{try{return JSON.parse(sessionStorage.getItem("analyzer_session_v1")||"null")}catch{return null}};
+const sb15=()=>window.ANALYZER_SB||((typeof ANALYZER_SB!=="undefined")?ANALYZER_SB:null);
+
+async function me15(){const sb=sb15();if(!sb)return null;try{return (await sb.auth.getUser()).data.user||null}catch{return null}}
+async function ownCloudMeta15(name,cloudId){
+ const sb=sb15(),me=await me15();if(!sb||!me)return null;
+ let q=sb.from("schematics").select("id,name,storage_path,owner_id,size_bytes,created_at").eq("owner_id",me.id);
+ if(cloudId)q=q.eq("id",cloudId);else q=q.eq("name",name).order("created_at",{ascending:false}).limit(1);
+ const {data,error}=await q.maybeSingle();if(error&&error.code!=="PGRST116")throw error;return data||null;
+}
+async function downloadOwn15(meta){
+ const sb=sb15();if(!sb||!meta?.storage_path)throw Error("Bulut dosya yolu bulunamadı.");
+ let direct;
+ try{direct=await sb.storage.from("schematics").download(meta.storage_path);if(!direct.error&&direct.data)return new File([direct.data],meta.name,{type:"application/pdf",lastModified:Date.now()})}catch{}
+ const {data,error}=await sb.storage.from("schematics").createSignedUrl(meta.storage_path,90);if(error)throw error;
+ const r=await fetch(data.signedUrl,{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);
+ return new File([await r.blob()],meta.name,{type:"application/pdf",lastModified:Date.now()});
+}
+
+async function syncOwnCloudLibrary15(){
+ const sb=sb15(),me=await me15();if(!sb||!me)return;
+ const {data,error}=await sb.from("schematics").select("id,name,storage_path,size_bytes,created_at,owner_id").eq("owner_id",me.id).order("created_at",{ascending:false});
+ if(error){console.warn("V15 cloud library sync",error);return}
+ let lib=read15(AHELIB15,[]),changed=false;
+ for(const r of data||[]){
+  let x=lib.find(v=>v.cloudId===r.id)||(lib.find(v=>v.name===r.name&&String(v.ownerMail||"").toLowerCase()===String(me.email||"").toLowerCase()));
+  if(!x){x={name:r.name,size:Number(r.size_bytes||0),time:r.created_at?Date.parse(r.created_at):Date.now(),ownerMail:me.email};lib.push(x);changed=true}
+  if(x.cloudId!==r.id||x.storagePath!==r.storage_path||x.ownerMail!==me.email){x.cloudId=r.id;x.storagePath=r.storage_path;x.ownerMail=me.email;changed=true}
+ }
+ if(changed){write15(AHELIB15,lib);window.renderLib?.()}
+}
+window.syncOwnCloudLibrary15=syncOwnCloudLibrary15;
+
+/* Cloud-first open: fixes files uploaded on another device/browser. */
+window.openLibFile=async function(name){
+ try{
+  window.toast?.((typeof L==="function"?L("openLib"):"Dosya açılıyor…"));
+  const me=await me15(),lib=read15(AHELIB15,[]);
+  let meta=lib.find(x=>x.name===name&&(!me?.email||!x.ownerMail||String(x.ownerMail).toLowerCase()===String(me.email).toLowerCase()));
+  if(me){
+   let cloud=null;try{cloud=await ownCloudMeta15(name,meta?.cloudId)}catch(e){console.warn(e)}
+   if(cloud){
+    const f=await downloadOwn15(cloud);
+    try{await storeLibraryFile(f)}catch{}
+    if(meta){meta.cloudId=cloud.id;meta.storagePath=cloud.storage_path;meta.ownerMail=me.email}else{lib.unshift({name:cloud.name,size:f.size,time:Date.now(),ownerMail:me.email,cloudId:cloud.id,storagePath:cloud.storage_path});meta=lib[0]}
+    write15(AHELIB15,lib);window.renderLib?.();await handle([f],true);return;
+   }
+  }
+  const f=await getLibraryFile(name);await handle([f],true);
+ }catch(e){window.toast?.("Şema açılamadı: "+(e?.message||e))}
+};
+
+/* Show only current user's local/cloud library rows; preserve share checkboxes. */
+window.renderLib=function(){
+ const root=$15("library");if(!root)return;
+ const lib=read15(AHELIB15,[]),mail=String(session15()?.mail||"").toLowerCase(),picked=new Set(read15(PICK15,[]));
+ const rows=lib.map((f,index)=>({f,index})).filter(({f})=>!mail||!f.ownerMail||String(f.ownerMail).toLowerCase()===mail);
+ root.innerHTML=rows.length?rows.map(({f,index},i)=>`<div class="item librow"><button class="mini" style="flex:1;text-align:left;padding:8px;background:#fff;color:#172733;min-width:0" onclick='openLibFile(${JSON.stringify(f.name)})'><b>${i+1}.</b> 📄 ${esc15(f.name)}${f.cloudId?`<div class="cloudSyncBadgeV15">☁ Merkezi kütüphane</div>`:""}</button><label class="libSharePick" title="Dosya paylaşımında seç"><input type="checkbox" data-share-pick-v15="${index}" ${picked.has(f.name)?"checked":""}>Paylaş</label><button class="mini" onclick="delLib(${index})">Sil</button></div>`).join(""):`<div class="count">${typeof L==="function"?L("libraryEmpty"):"Kütüphane boş."}</div>`;
+ root.querySelectorAll("[data-share-pick-v15]").forEach(ch=>ch.onchange=()=>{
+  const f=lib[Number(ch.dataset.sharePickV15)];if(!f)return;const s=new Set(read15(PICK15,[]));ch.checked?s.add(f.name):s.delete(f.name);write15(PICK15,[...s]);
+  const info=$15("shareSelectedInfoV5");if(info){const chosen=rows.map(x=>x.f).filter(x=>s.has(x.name));info.innerHTML=`<b>Seçili dosyalar (${chosen.length})</b>${chosen.length?"<br>• "+chosen.map(x=>esc15(x.name)).join("<br>• "):"<br>Dosya seçilmedi."}`}
+ });
+};
+
+/* Robust 2-stage delete flow, always centered on current viewport. */
+function ensureDeleteFinal15(){
+ let m=$15("deleteFinalV15");if(m)return m;
+ document.body.insertAdjacentHTML("beforeend",`<div id="deleteFinalV15"><button class="popupCloseV15" id="deleteFinalCloseV15" type="button">×</button><div id="deleteFinalTextV15" style="font-weight:800;line-height:1.5;padding-right:46px"></div><div class="confirmBtnsV15"><button class="confirmCancelV15" id="deleteFinalCancelV15">Geri dön</button><button class="confirmDangerV15" id="deleteFinalYesV15">EVET, DOSYAYI SİL</button></div></div>`);
+ m=$15("deleteFinalV15");$15("deleteFinalCloseV15").onclick=$15("deleteFinalCancelV15").onclick=()=>m.style.display="none";return m;
+}
+let pendingDelete15=null;
+async function activeCloudSharesForFile15(file){
+ const sb=sb15(),me=await me15();if(!sb||!me)return[];
+ let meta=null;try{meta=await ownCloudMeta15(file.name,file.cloudId)}catch{}
+ if(!meta)return[];
+ const {data,error}=await sb.from("file_shares").select("id,file_id,recipient_id,expires_at,profiles!file_shares_recipient_id_fkey(username,email)").eq("owner_id",me.id).eq("file_id",meta.id).gt("expires_at",new Date().toISOString());
+ if(error){
+  try{const r=await sb.rpc("my_active_file_shares");return (r.data||[]).filter(x=>x.owner_id===me.id&&x.file_id===meta.id)}catch{return[]}
+ }
+ return data||[];
+}
+window.delLib=async function(i){
+ const lib=read15(AHELIB15,[]),f=lib[i];if(!f)return;
+ pendingDelete15={index:i,file:f};
+ let shared=[];try{shared=await activeCloudSharesForFile15(f)}catch{}
+ const m=$15("deleteConfirmV5");if(!m)return;
+ const txt=$15("deleteTextV5"),btn=$15("deleteBtnsV5");
+ const who=shared.map(s=>s.profiles?.username||s.profiles?.email||s.recipient_username||s.recipient_email).filter(Boolean);
+ txt.innerHTML=shared.length?`<b>${esc15(who.join(", ")||"Bir kullanıcı")}</b> ile paylaşılan <b>${esc15(f.name)}</b> dosyası silinecek. Aktif paylaşım da hemen sonlandırılacak.`:`Bu dosya kalıcı olarak uygulamadan silinecek.<br><b>${esc15(f.name)}</b>`;
+ btn.innerHTML=`<button class="deleteBack" id="deleteCancelV15">Geri dön</button><button class="deleteGo" id="deleteContinueV15">Devam</button>`;
+ m.style.display="block";
+ $15("deleteCancelV15").onclick=()=>{m.style.display="none";pendingDelete15=null};
+ $15("deleteContinueV15").onclick=()=>{
+  m.style.display="none";const fin=ensureDeleteFinal15();
+  $15("deleteFinalTextV15").innerHTML=`Son onay:<br><b>${esc15(f.name)}</b> kalıcı olarak silinecek${shared.length?" ve aktif paylaşımı sonlandırılacak":""}.<br><br>Bu işlem geri alınamaz.`;
+  fin.style.display="block";
+  $15("deleteFinalYesV15").onclick=()=>deleteConfirmed15(shared);
+ };
+};
+async function deleteConfirmed15(shared=[]){
+ const p=pendingDelete15;if(!p)return;const {file:f}=p,lib=read15(AHELIB15,[]),sb=sb15(),me=await me15();
+ const yes=$15("deleteFinalYesV15");yes.disabled=true;yes.textContent="SİLİNİYOR…";
+ try{
+  let meta=null;if(sb&&me){try{meta=await ownCloudMeta15(f.name,f.cloudId)}catch{}}
+  if(sb&&me&&meta){
+   try{await sb.from("file_shares").delete().eq("owner_id",me.id).eq("file_id",meta.id)}catch{}
+   if(meta.storage_path){const rr=await sb.storage.from("schematics").remove([meta.storage_path]);if(rr.error)console.warn("storage remove",rr.error)}
+   const dr=await sb.from("schematics").delete().eq("id",meta.id).eq("owner_id",me.id);if(dr.error)throw dr.error;
+  }
+  const idx=lib.findIndex(x=>(f.cloudId&&x.cloudId===f.cloudId)||(x.name===f.name&&String(x.ownerMail||"").toLowerCase()===String(f.ownerMail||me?.email||"").toLowerCase()));
+  if(idx>=0)lib.splice(idx,1);write15(AHELIB15,lib);
+  try{await deleteLibraryFile(f.name)}catch{}try{await deleteScanCache(f.name)}catch{}
+  const picks=new Set(read15(PICK15,[]));picks.delete(f.name);write15(PICK15,[...picks]);
+  let ls=read15(LOCALSHARE15,[]).map(s=>(s.fileNames||[]).includes(f.name)?{...s,ended:true,endedAt:Date.now()}:s);write15(LOCALSHARE15,ls);
+  $15("deleteFinalV15").style.display="none";pendingDelete15=null;window.renderLib?.();await syncOwnCloudLibrary15();window.toast?.("✓ Dosya kalıcı olarak silindi.");
+  if(window.refreshCloudShares9)await window.refreshCloudShares9();
+ }catch(e){window.toast?.("Dosya silinemedi: "+(e?.message||e))}
+ finally{yes.disabled=false;yes.textContent="EVET, DOSYAYI SİL"}
+}
+
+/* End share from legacy active-share card by mapping it to central rows. */
+window.requestEndLocalShare15=async function(localId){
+ const local=read15(LOCALSHARE15,[]).find(s=>String(s.id)===String(localId));if(!local)return;
+ const sb=sb15(),me=await me15();if(!sb||!me)return window.toast?.("Supabase oturumu yok.");
+ try{
+  let q=sb.from("file_shares").select("id,file_id,recipient_id,expires_at").eq("owner_id",me.id).eq("recipient_id",local.toId).gt("expires_at",new Date().toISOString());
+  if(local.fileIds?.length)q=q.in("file_id",local.fileIds);
+  const {data,error}=await q;if(error)throw error;
+  if(!data?.length)throw Error("Aktif merkezi paylaşım bulunamadı.");
+  const fake={recipient:{username:local.toName,email:local.toMail},files:(local.fileNames||[]).map(name=>({name})),shareIds:data.map(x=>x.id)};
+  if(typeof askEndShare15==="function")askEndShare15(fake);
+  else{window.__pendingEndLocal15=fake;$15("faultSortBtnV6")?.click()}
+ }catch(e){window.toast?.("Paylaşım bilgisi alınamadı: "+(e?.message||e))}
+};
+
+/* Ensure every newly uploaded PDF reaches cloud storage, and then refresh cloud library. */
+const priorHandle15=window.handle;
+if(typeof priorHandle15==="function"){
+ window.handle=handle=async function(files,fromLibrary=false){
+  const r=await priorHandle15(files,fromLibrary);
+  if(!fromLibrary&&files?.length){
+   const f=files[0],sb=sb15(),me=await me15();
+   if(sb&&me){
+    try{
+     let lib=read15(AHELIB15,[]),meta=lib.find(x=>x.name===f.name&&(!x.ownerMail||String(x.ownerMail).toLowerCase()===String(me.email).toLowerCase()));
+     if(meta&&!meta.cloudId){
+      const row=await cloudUploadPDF(f);meta.cloudId=row.id;meta.storagePath=row.storage_path;meta.ownerMail=me.email;write15(AHELIB15,lib);
+      try{await cloudSaveScan(row.id,window.globalEmap||globalEmap,window.globalQmap||globalQmap)}catch{}
+     }
+     await syncOwnCloudLibrary15();window.renderLib?.()
+    }catch(e){console.error("V15 cloud upload",e);window.toast?.("PDF cihazda açıldı fakat merkezi kütüphaneye yüklenemedi: "+(e?.message||e))}
+   }
+  }
+  return r;
+ };
+}
+
+/* Keep cloud library consistent after sign-in and when returning to the tab. */
+let syncBusy15=false;
+async function scheduledSync15(){if(syncBusy15)return;syncBusy15=true;try{await syncOwnCloudLibrary15();window.renderLib?.()}finally{syncBusy15=false}}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)setTimeout(scheduledSync15,150)});
+window.addEventListener("pageshow",()=>setTimeout(scheduledSync15,350));
+setInterval(()=>{if(!$15("authGate")?.classList.contains("off"))return;scheduledSync15()},30000);
+setTimeout(scheduledSync15,1500);
+})();
+</script>
 
 <script id="ANALYZER_V14_UPDATE_GUARD">
 (()=>{
- const BUILD="V14.0-central-share";
+ const BUILD="V15.0-stable-share-auth";
  let checking=false,lastCheck=0;
  async function checkBuild(force=false){
   const now=Date.now();if(checking||(!force&&now-lastCheck<15000))return;checking=true;lastCheck=now;
