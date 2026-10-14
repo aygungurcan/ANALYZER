@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ANALYZER</title>
-<meta name="analyzer-build" content="V15.0-stable-share-auth">
+<meta name="analyzer-build" content="V15.1-engineering-maintenance">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-window.ANALYZER_VERSION="V15.0-stable-share-auth";
+window.ANALYZER_VERSION="V15.1-engineering-maintenance";
 window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;
 </script>
 <!-- ANALYZER V14: permanent central sharing + shared-file analysis + mobile layout -->
@@ -1029,7 +1029,7 @@ document.addEventListener("click",e=>{if(!$a("userPop").contains(e.target)&&!e.t
 const ss=session();if(ss){$a("authGate").classList.add("off");if(ss.mail===CENTER){$a("adminBtn").style.display="block";renderAdmin()}}
 })();
 </script>
-<script>window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;window.ANALYZER_VERSION="V15.0-stable-share-auth";</script>
+<script>window.ANALYZER_FORCE_CLOUD_NOTIFICATIONS=true;window.ANALYZER_VERSION="V15.1-engineering-maintenance";</script>
 <script id="ANALYZER_CLOUD_V4">
 const ANALYZER_SUPABASE={
  enabled:true,
@@ -2519,7 +2519,7 @@ setTimeout(scheduledSync15,1500);
 
 <script id="ANALYZER_V14_UPDATE_GUARD">
 (()=>{
- const BUILD="V15.0-stable-share-auth";
+ const BUILD="V15.1-engineering-maintenance";
  let checking=false,lastCheck=0;
  async function checkBuild(force=false){
   const now=Date.now();if(checking||(!force&&now-lastCheck<15000))return;checking=true;lastCheck=now;
@@ -2538,6 +2538,244 @@ setTimeout(scheduledSync15,1500);
  window.addEventListener("pageshow",e=>{if(e.persisted){checkBuild(true)}else{setTimeout(()=>checkBuild(false),1200)}});
  document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkBuild(true)});
  setInterval(()=>checkBuild(false),60000);
+})();
+</script>
+
+<style id="ANALYZER_V15_1_STYLE">
+/* ANALYZER V15.1 — engineering accuracy / device cleanup / mobile admin fixes */
+.refMark,.refMark.v151Mark{
+  border:1.5px solid #f2cf00!important;
+  background:rgba(255,218,0,.025)!important;
+  border-radius:50%!important;
+  box-shadow:0 0 0 .5px rgba(114,92,0,.35),0 0 6px rgba(242,207,0,.35)!important;
+  animation:none!important;
+}
+/* Never expose e-mail addresses in the share-user picker. */
+#shareUserListV9 .shareUserOptionV9 small{display:none!important}
+#shareUserListV9 .shareUserOptionV9>div{min-width:0}
+/* Make the full DOSYA PAYLAŞ surface clickable, including translated/rendered text. */
+#mainShareBtn{position:relative!important;z-index:60!important;display:flex!important;align-items:center!important;justify-content:center!important;pointer-events:auto!important;isolation:isolate}
+#mainShareBtn .shareHitV151{position:absolute;inset:0;z-index:10;background:transparent;pointer-events:auto;cursor:pointer;border-radius:inherit}
+/* Mobile: admin sits immediately above DOSYA PAYLAŞ in the right drawer. */
+@media(max-width:900px){
+  aside.right .panel>#adminBtn{
+    position:static!important;display:block;width:100%!important;min-height:44px!important;
+    margin:0 0 10px!important;padding:9px 12px!important;border:0!important;border-radius:8px!important;
+    background:#172d38!important;color:#fff!important;font-weight:900!important;z-index:auto!important;
+  }
+  aside.right .panel>#adminBtn[style*="display: none"]{display:none!important}
+  aside.right .panel>#mainShareBtn{margin:0 0 10px!important;width:100%!important;min-height:44px!important}
+}
+</style>
+<script id="ANALYZER_V15_1_PATCH">
+(()=>{
+"use strict";
+const V151_BUILD="V15.1-engineering-maintenance";
+const $151=id=>document.getElementById(id);
+const esc151=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const RECEIVED_KEY151="analyzer_received_share_cache_v151";
+const LIB_KEY151="aheLib";
+const SESSION_KEY151="analyzer_session_v1";
+const ACCOUNT_KEY151="analyzer_accounts_v1";
+
+/* ------------------------------------------------------------------
+   1) RECEIVED SHARES: cache is revoked locally when share ends/expires.
+   The server remains authoritative; this only manages browser/app cache.
+   ------------------------------------------------------------------ */
+function read151(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch{return d}}
+function write151(k,v){localStorage.setItem(k,JSON.stringify(v))}
+async function me151(){try{return (await window.ANALYZER_SB?.auth.getUser())?.data?.user||null}catch{return null}}
+function received151(){return read151(RECEIVED_KEY151,[])}
+function saveReceived151(a){write151(RECEIVED_KEY151,a)}
+async function registerIncomingClick151(fileId){
+ const sb=window.ANALYZER_SB,me=await me151();if(!sb||!me||!fileId)return;
+ try{
+  const {data,error}=await sb.rpc("my_active_file_shares");if(error)throw error;
+  const row=(data||[]).find(x=>String(x.file_id)===String(fileId)&&String(x.recipient_id)===String(me.id));if(!row)return;
+  let a=received151(),x=a.find(v=>String(v.fileId)===String(fileId));
+  const rec={fileId:row.file_id,name:row.file_name||"Paylaşılan dosya.pdf",expiresAt:row.expires_at,shareId:row.share_id,recipientId:row.recipient_id,ownerId:row.owner_id,openedAt:Date.now()};
+  if(x)Object.assign(x,rec);else a.push(rec);saveReceived151(a);
+  /* handle() writes the opened shared file into local metadata; tag it after it settles. */
+  setTimeout(()=>{
+   let lib=read151(LIB_KEY151,[]),changed=false;
+   for(const f of lib){if(f.name===rec.name){f.receivedShare=true;f.sharedFileId=rec.fileId;f.shareExpiresAt=rec.expiresAt;changed=true}}
+   if(changed){write151(LIB_KEY151,lib);window.renderLib?.()}
+  },1100);
+ }catch(e){console.warn("V15.1 incoming share registration",e)}
+}
+function clearViewerForExpired151(name){
+ try{
+  if(typeof currentFileName!=="undefined"&&currentFileName===name){
+   currentFileName="";try{globalEmap=null;globalQmap=null}catch{}
+   const pages=$151("pages"),elements=$151("elements"),equipment=$151("equipment"),drop=$151("drop"),title=$151("title"),status=$151("status"),badge=$151("badge"),bar=$151("bar");
+   if(pages)pages.innerHTML='<div class="empty">Paylaşım sona erdi. Paylaşılan dosya bu cihazdan kaldırıldı.</div>';
+   if(elements)elements.innerHTML="";if(equipment)equipment.innerHTML="";if(drop)drop.style.display="block";
+   if(title)title.textContent="ŞEMA GÖRÜNTÜLEME";if(status)status.textContent="Paylaşılan dosyaya erişim sona erdi.";if(badge)badge.textContent="SAYFA 0/0";if(bar)bar.style.width="0%";
+  }
+ }catch(e){console.warn(e)}
+}
+async function purgeOneReceived151(rec,{silent=false}={}){
+ try{if(typeof deleteLibraryFile==="function")await deleteLibraryFile(rec.name)}catch{}
+ try{if(typeof deleteScanCache==="function")await deleteScanCache(rec.name)}catch{}
+ let lib=read151(LIB_KEY151,[]);
+ lib=lib.filter(f=>!(f.receivedShare&&(String(f.sharedFileId||"")===String(rec.fileId)||f.name===rec.name)));
+ write151(LIB_KEY151,lib);try{window.renderLib?.()}catch{}
+ clearViewerForExpired151(rec.name);
+ if(!silent)window.toast?.(`✓ ${rec.name} — paylaşım sona erdi; cihaz önbelleğinden kaldırıldı.`)
+}
+let cleanupBusy151=false,lastCleanup151=0;
+async function cleanupReceivedShares151(force=false){
+ const now=Date.now();if(cleanupBusy151||(!force&&now-lastCleanup151<4500))return;lastCleanup151=now;cleanupBusy151=true;
+ try{
+  const reg=received151();if(!reg.length)return;
+  const sb=window.ANALYZER_SB,me=await me151();
+  if(!sb||!me){for(const r of reg)await purgeOneReceived151(r,{silent:true});saveReceived151([]);return}
+  let active=[];try{const {data,error}=await sb.rpc("my_active_file_shares");if(error)throw error;active=(data||[]).filter(x=>String(x.recipient_id)===String(me.id))}catch(e){console.warn("V15.1 active-share check",e);return}
+  const activeIds=new Set(active.map(x=>String(x.file_id))),keep=[];
+  for(const r of reg){const still=activeIds.has(String(r.fileId))&&Date.parse(r.expiresAt||0)>Date.now();if(still)keep.push(r);else await purgeOneReceived151(r)}
+  saveReceived151(keep);
+ }finally{cleanupBusy151=false}
+}
+window.cleanupReceivedShares151=cleanupReceivedShares151;
+document.addEventListener("click",e=>{const b=e.target?.closest?.("[data-cloud-open-v9]");if(b)registerIncomingClick151(b.dataset.cloudOpenV9)},true);
+window.addEventListener("pageshow",()=>setTimeout(()=>cleanupReceivedShares151(true),700));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)cleanupReceivedShares151(true)});
+setInterval(()=>cleanupReceivedShares151(false),5000);
+try{window.ANALYZER_SB?.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_OUT")cleanupReceivedShares151(true);if(ev==="SIGNED_IN")setTimeout(updateGreeting151,200)})}catch{}
+
+/* ------------------------------------------------------------------
+   2) ENGINEERING REFERENCE ENGINE.
+   IEC/common prefixes stay standard; Cantalupi-style dotted R.xx.xx
+   references are treated as relay/contact identifiers, not resistors.
+   ------------------------------------------------------------------ */
+const REF151=/\b(?:FU|QF|KM|KA|KT|PLC|CB|PS|F|Q|K|M|S|B|X|R|C|D|H|T)\s*(?:[-_.]\s*)?\d{1,4}[A-Z]?(?:\s*[.:/\-]\s*\d{1,4}[A-Z]?){0,2}\b/gi;
+function canon151(raw){return String(raw||"").toUpperCase().replace(/\s+/g,"").replace(/_/g,"-")}
+function compact151(raw){return canon151(raw).replace(/[^A-Z0-9]/g,"")}
+function prefix151(raw){return (canon151(raw).match(/^[A-Z]+/)||[""])[0]}
+function extractRefs151(str){const out=[];REF151.lastIndex=0;let m;while((m=REF151.exec(String(str||"")))){const r=canon151(m[0]);if(valid151(r))out.push(r)}return [...new Set(out)]}
+function valid151(raw){
+ const z=canon151(raw);
+ if(!/^(FU|QF|KM|KA|KT|PLC|CB|PS|F|Q|K|M|S|B|X|R|C|D|H|T)(?:[-_.]?\d{1,4}[A-Z]?)(?:[.:/\-]\d{1,4}[A-Z]?){0,2}$/.test(z))return false;
+ const simple=z.match(/^([A-Z]+)[-_.]?(\d+)$/);if(simple&&simple[1].length===1&&simple[2].length>=3&&/^([0-9])\1+$/.test(simple[2]))return false;
+ return true;
+}
+function pageContext151(ref,pages){
+ const key=compact151(ref);for(const p of [...(pages||[])].map(Number).filter(Boolean).slice(0,4)){const txt=String(pageTexts?.[p]||"");if(!txt)continue;const u=txt.toUpperCase(),digits=key.replace(/^[A-Z]+/,"");let i=u.search(new RegExp(digits.slice(0,Math.min(4,digits.length)).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));if(i>=0)return u.slice(Math.max(0,i-140),i+220)}return ""
+}
+function type151(ref,pages){
+ const z=canon151(ref),p=prefix151(z),ctx=pageContext151(z,pages);
+ if(p==="R"){
+  if(/\b(RESIST|RESISTOR|OHM|RHEOSTAT|POTENTIOM)/.test(ctx))return "Direnç";
+  if(/^R[-_.]?\d{1,4}(?:[.:/\-]\d{1,4}){1,2}$/.test(z)||/\b(RELAY|CONTACT|DRY\s*CONT|COIL|RUNNING|ALARM|FAULT|START|STOP)\b/.test(ctx))return "Röle/Kontak";
+  return "Direnç";
+ }
+ const map={FU:"Sigorta",F:"Sigorta/Koruma",QF:"Devre Kesici",CB:"Devre Kesici",Q:"Şalter/Kesici",K:"Röle",KA:"Röle",KM:"Kontaktör",KT:"Zaman Rölesi",M:"Motor",B:"Sensör",S:"Anahtar/Kontak",X:"Terminal/Klemens",C:"Kondansatör",D:"Diyot",H:"Gösterge/Lamba",T:"Trafo",PS:"Güç Kaynağı",PLC:"PLC"};
+ return map[p]||"Devre Elemanı";
+}
+try{validRef=function(r){return valid151(r)}}catch{}
+try{refType=function(r){return type151(r,[])}}catch{}
+
+let indexCacheKey151="",indexCache151=new Map();
+function buildIndex151(){
+ let last=0;for(let i=(pageTexts?.length||0)-1;i>=1;i--){if(pageTexts?.[i]){last=i;break}}
+ const k=`${typeof currentFileName!=="undefined"?currentFileName:""}|${last}|${String(pageTexts?.[last]||"").length}`;if(k===indexCacheKey151)return indexCache151;
+ const map=new Map();
+ for(let p=1;p<=last;p++){
+  const joined=[String(pageTexts?.[p]||""),...((pageTextItems?.[p]||[]).map(x=>String(x.str||"")))].join(" ");
+  for(const r of extractRefs151(joined)){const c=compact151(r);let x=map.get(c);if(!x){x={ref:r,pages:new Set};map.set(c,x)}x.pages.add(p);if(r.length>x.ref.length)x.ref=r}
+ }
+ indexCacheKey151=k;indexCache151=map;return map;
+}
+function removePartialRefs151(emap){
+ const keys=[...emap.keys()];for(const k of keys){const ck=compact151(k),v=emap.get(k);if(!v)continue;const longer=keys.find(z=>z!==k&&compact151(z).startsWith(ck)&&compact151(z).length>ck.length&&[...(v.pages||[])].some(p=>[...(emap.get(z)?.pages||[])].includes(p)));if(longer&&/[.:/\-]/.test(longer)&&prefix151(k)==="R")emap.delete(k)}
+}
+const baseAnalyze151=typeof analyzePage==="function"?analyzePage:null;
+if(baseAnalyze151){
+ analyzePage=function(text,page,emap,qmap){
+  baseAnalyze151(text,page,emap,qmap);
+  const joined=[String(text||""),...((pageTextItems?.[page]||[]).map(x=>String(x.str||"")))].join(" ");
+  for(const r of extractRefs151(joined)){if(!emap.has(r))emap.set(r,{ref:r,type:type151(r,[page]),pages:new Set});const e=emap.get(r);if(!(e.pages instanceof Set))e.pages=new Set(e.pages||[]);e.pages.add(Number(page));e.type=type151(r,e.pages)}
+  removePartialRefs151(emap);
+ };
+}
+const baseRoute151=typeof circuitRoute==="function"?circuitRoute:null;
+try{circuitRoute=function(ref){const x=buildIndex151().get(compact151(ref));return x?[...x.pages].sort((a,b)=>a-b):(baseRoute151?baseRoute151(ref):[])}}catch{}
+const baseRender151=window.renderResults||(typeof renderResults==="function"?renderResults:null);
+if(baseRender151){
+ window.renderResults=function(emap,qmap){
+  const idx=buildIndex151();for(const x of idx.values()){let key=[...emap.keys()].find(k=>compact151(k)===compact151(x.ref));if(!key){key=x.ref;emap.set(key,{ref:x.ref,type:type151(x.ref,x.pages),pages:new Set(x.pages)})}else{const e=emap.get(key);e.pages=new Set(x.pages);e.type=type151(key,e.pages)}}
+  removePartialRefs151(emap);for(const [k,e] of emap){e.type=type151(e.ref||k,e.pages)}
+  return baseRender151(emap,qmap);
+ };
+ try{renderResults=window.renderResults}catch{}
+}
+const baseTech151=window.techForRef||(typeof techForRef==="function"?techForRef:null);
+window.techForRef=function(ref){if(type151(ref,[])==="Röle/Kontak")return ["Röle/Kontak",4,"Bobin/kumanda devresini ve ilgili NO/NC kontağın durumunu kontrol et. Kontak referansını aynı R.xx.xx ailesindeki bobin/kontaklarla izleyerek enerjili ve enerjisiz durumda geçişi doğrula."];return baseTech151?baseTech151(ref):[type151(ref,[]),7,"Besleme ve giriş/çıkış durumunu şemaya göre kontrol et."]};
+try{techForRef=window.techForRef}catch{}
+
+/* Exact geometry first; OCR fallback second. */
+const oldHighlight151=window.highlightRef||(typeof highlightRef==="function"?highlightRef:null);
+function bbox151(items,vp,canvas){
+ const P=window.pdfjsLib||window.PDFJS||(typeof PDFJS!=="undefined"?PDFJS:null);if(!P||!items.length)return null;const sx=canvas.clientWidth/canvas.width,sy=canvas.clientHeight/canvas.height,bb=[];
+ for(const it of items){try{const tr=P.Util.transform(vp.transform,it.transform),fs=Math.max(7,Math.hypot(tr[2],tr[3])),x=tr[4]*sx,base=(canvas.height-tr[5])*sy,w=Math.max((it.width||8)*vp.scale*sx,7),h=Math.max(fs*sy,10);bb.push({l:x,t:base-h*1.05,r:x+w,b:base+h*.22})}catch{}}
+ if(!bb.length)return null;return {l:Math.min(...bb.map(x=>x.l)),t:Math.min(...bb.map(x=>x.t)),r:Math.max(...bb.map(x=>x.r)),b:Math.max(...bb.map(x=>x.b))}
+}
+function exactBoxes151(ref,p,canvas){
+ const target=compact151(ref),items=pageTextItems?.[p]||[],vp=pageViewports?.[p];if(!items.length||!vp)return[];const P=window.pdfjsLib||window.PDFJS||(typeof PDFJS!=="undefined"?PDFJS:null);if(!P)return[];
+ const geom=items.map((it,i)=>{try{const tr=P.Util.transform(vp.transform,it.transform),fs=Math.max(7,Math.hypot(tr[2],tr[3]));return {it,i,x:tr[4],y:tr[5],fs,z:compact151(it.str)}}catch{return null}}).filter(Boolean),groups=[];
+ for(const g of geom)if(g.z===target)groups.push({its:[g.it],base:230});
+ for(const mode of ["h","v"]){const buckets=new Map();for(const g of geom){const key=mode==="h"?Math.round(g.y/10):Math.round(g.x/10);(buckets.get(key)||buckets.set(key,[]).get(key)).push(g)}for(const arr of buckets.values()){arr.sort(mode==="h"?(a,b)=>a.x-b.x:(a,b)=>b.y-a.y);for(let i=0;i<arr.length;i++){let joined="",its=[];for(let j=i;j<Math.min(arr.length,i+8);j++){const z=arr[j].z;if(!z)continue;if(its.length){const prev=arr[j-1],gap=mode==="h"?arr[j].x-prev.x:prev.y-arr[j].y;if(gap>Math.max(46,arr[j].fs*5.5))break}joined+=z;its.push(arr[j].it);if(joined===target){groups.push({its:[...its],base:205-its.length});break}if(joined.length>target.length+1)break}}}}
+ const out=[];for(const g of groups){const box=bbox151(g.its,vp,canvas);if(!box)continue;const cx=(box.l+box.r)/2,cy=(box.t+box.b)/2;let score=g.base;if(cy>canvas.clientHeight*.86)score-=85;if(cx<canvas.clientWidth*.02||cx>canvas.clientWidth*.98)score-=25;const area=Math.max(1,(box.r-box.l)*(box.b-box.t));if(area>24000)score-=30;out.push({box,score})}return out.sort((a,b)=>b.score-a.score)
+}
+function drawYellow151(card,canvas,box,ref,p){
+ document.querySelectorAll(".refMark,.analyzerRefFocus").forEach(x=>x.remove());let layer=card.querySelector(".markLayer");if(!layer){layer=document.createElement("div");layer.className="markLayer";canvas.parentElement?.appendChild(layer)}
+ const bw=Math.max(1,box.r-box.l),bh=Math.max(1,box.b-box.t),w=Math.max(34,Math.min(108,bw+26)),h=Math.max(28,Math.min(80,bh+24)),cx=(box.l+box.r)/2,cy=(box.t+box.b)/2,m=document.createElement("div");m.className="refMark v151Mark";m.title="Çift tıklayınca işaret kaldırılır";m.style.left=Math.max(0,cx-w/2)+"px";m.style.top=Math.max(0,cy-h/2)+"px";m.style.width=Math.min(w,canvas.clientWidth-Math.max(0,cx-w/2))+"px";m.style.height=Math.min(h,canvas.clientHeight-Math.max(0,cy-h/2))+"px";m.addEventListener("dblclick",e=>{e.preventDefault();e.stopPropagation();m.remove()});layer.appendChild(m);setTimeout(()=>m.scrollIntoView({behavior:"smooth",block:"center",inline:"center"}),70);if($151("badge"))$151("badge").textContent=`SAYFA ${p}/${typeof total!=="undefined"?total:"?"}`;window.toast?.(`${ref} bulundu — Sayfa ${p}. Sarı işareti kaldırmak için çift tıklayın.`)
+}
+window.highlightRef=async function(ref,p){
+ if(!valid151(ref)){window.toast?.(`${ref}: güvenilir devre elemanı referansı olarak doğrulanamadı.`);return}
+ const pages=(typeof circuitRoute==="function"?circuitRoute(ref):[])||[];p=Number(p)||pages[0]||1;if(pages.length&&!pages.includes(p))p=pages[0];
+ const card=document.querySelector(`.page[data-page="${p}"]`);if(!card)return;card.scrollIntoView({behavior:"smooth",block:"center"});const canvas=card.querySelector("canvas");if(!canvas)return;const boxes=exactBoxes151(ref,p,canvas);if(boxes.length){drawYellow151(card,canvas,boxes[0].box,ref,p);return}
+ if(oldHighlight151)return oldHighlight151(ref,p);window.toast?.(`${ref}: sayfadaki kesin konum bulunamadı.`)
+};
+try{highlightRef=window.highlightRef;focusCircuitRef=function(ref,page){return window.highlightRef(ref,page)};window.focusCircuitRef=focusCircuitRef}catch{}
+
+/* Invalidate older analysis cache so improved extraction is actually used. */
+if(typeof openAnalysisDB==="function"){
+ window.loadScanCache=async function(name){try{const db=await openAnalysisDB(),tx=db.transaction(ANALYSIS_STORE,"readonly"),q=tx.objectStore(ANALYSIS_STORE).get(name),row=await new Promise((ok,bad)=>{q.onsuccess=()=>ok(q.result||null);q.onerror=()=>bad(q.error)});return row&&Number(row.version)>=4?row:null}catch{return null}};
+ window.saveScanCache=async function(name,emap,qmap){try{const db=await openAnalysisDB(),tx=db.transaction(ANALYSIS_STORE,"readwrite");tx.objectStore(ANALYSIS_STORE).put({name,time:Date.now(),version:4,elements:packMap(emap),equipment:packMap(qmap),pages:(pageTexts||[]).map(x=>String(x||"").slice(0,180000))});await new Promise((ok,bad)=>{tx.oncomplete=ok;tx.onerror=()=>bad(tx.error)})}catch(e){console.warn(e)}};
+ try{loadScanCache=window.loadScanCache;saveScanCache=window.saveScanCache}catch{}
+}
+
+/* ------------------------------------------------------------------
+   3) MOBILE ADMIN PLACEMENT + FULL SHARE BUTTON HIT AREA.
+   ------------------------------------------------------------------ */
+function installShareHit151(){const b=$151("mainShareBtn");if(!b||b.querySelector(".shareHitV151"))return;const s=document.createElement("span");s.className="shareHitV151";s.setAttribute("aria-hidden","true");b.appendChild(s)}
+function placeAdmin151(){
+ const admin=$151("adminBtn"),share=$151("mainShareBtn"),stack=$151("headerActionStackV6");if(!admin||!share)return;
+ if(innerWidth<=900){const panel=share.parentElement;if(panel&&admin.parentElement!==panel)panel.insertBefore(admin,share)}else if(stack&&admin.parentElement!==stack)stack.insertBefore(admin,stack.firstChild)
+}
+installShareHit151();placeAdmin151();addEventListener("resize",()=>{placeAdmin151();installShareHit151()});setTimeout(()=>{placeAdmin151();installShareHit151()},500);
+
+/* ------------------------------------------------------------------
+   4) GREETING USES AUTHENTICATED USERNAME.
+   ------------------------------------------------------------------ */
+async function currentName151(){
+ let mail="";try{mail=JSON.parse(sessionStorage.getItem(SESSION_KEY151)||"null")?.mail||""}catch{}
+ const local=read151(ACCOUNT_KEY151,[]).find(x=>String(x.mail||"").toLowerCase()===String(mail).toLowerCase());let name=local?.name||"";
+ try{const me=await me151();if(me){const {data}=await window.ANALYZER_SB.from("profiles").select("username").eq("id",me.id).maybeSingle();name=data?.username||me.user_metadata?.username||name||me.email?.split("@")[0]||"Kullanıcı"}}catch{}
+ return name||"Kullanıcı"
+}
+async function updateGreeting151(){
+ const lab=document.querySelector(".fault>label");if(!lab)return;const name=await currentName151(),lang=(typeof currentLang!=="undefined"?currentLang:localStorage.getItem("analyzer_lang"))||"tr";
+ const greetings={tr:`Merhaba ${name}, lütfen arızayı bu satırda belirtin.`,en:`Hello ${name}, please describe the fault on this line.`,de:`Hallo ${name}, bitte beschreiben Sie den Fehler in dieser Zeile.`,it:`Ciao ${name}, descrivi il guasto in questa riga.`,fr:`Bonjour ${name}, décrivez la panne sur cette ligne.`};lab.textContent=greetings[lang]||greetings.en;lab.dataset.userGreeting151="1"
+}
+window.updateGreeting151=updateGreeting151;
+const oldSetLang151=typeof setLang==="function"?setLang:null;if(oldSetLang151){setLang=function(code){const r=oldSetLang151(code);setTimeout(updateGreeting151,0);return r}}
+setTimeout(updateGreeting151,450);setInterval(()=>{if(!$151("authGate")?.classList.contains("off"))return;updateGreeting151()},15000);
+
+/* Re-run list with corrected circuit types once this patch is loaded. */
+setTimeout(()=>{try{if(typeof globalEmap!=="undefined"&&globalEmap&&typeof globalQmap!=="undefined"&&globalQmap)window.renderResults(globalEmap,globalQmap)}catch{}},900);
+window.ANALYZER_VERSION=V151_BUILD;
 })();
 </script>
 
